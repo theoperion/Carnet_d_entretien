@@ -123,6 +123,23 @@ main{padding:14px 14px 0}
 .btnrow .go{margin-top:8px;font-size:14px;padding:12px 8px}
 .mini{font-family:var(--t);font-size:12px;letter-spacing:.8px;text-transform:uppercase;border:1.5px solid var(--ink);border-radius:4px;padding:6px 10px 5px;background:var(--paper);display:inline-flex;align-items:center;gap:6px}
 .mini .i{width:16px;height:16px}
+.expbtn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--paper);border:2px solid var(--ink);border-radius:4px;padding:10px 12px;margin:0 0 12px;box-shadow:3px 3px 0 var(--ink)}
+.expbtn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.expbtn .ic{flex:none;width:38px;height:38px;border-radius:4px;background:var(--yel);display:grid;place-items:center;font-size:20px}
+.expbtn b{display:block;font-family:var(--t);font-size:15px;letter-spacing:.8px;text-transform:uppercase}
+.expbtn small{color:var(--muted);font-size:12.5px}
+.expbtn .chev{margin-left:auto;font-size:22px;color:var(--muted)}
+.prog{background:var(--ink);color:#fff;border-radius:4px;padding:14px;margin-top:12px}
+.prog .lab{font-family:var(--t);font-size:12px;letter-spacing:1px;color:var(--yel);text-transform:uppercase}
+.prog .et{font-family:var(--m);font-size:13px;margin-top:4px}
+.prog .gauge>i{transition:width .6s}
+.prog .gauge.run>i{background-image:repeating-linear-gradient(-45deg,var(--yel) 0 8px,#d9a200 8px 16px);background-size:23px 23px;animation:stripes 1s linear infinite}
+@keyframes stripes{to{background-position:23px 0}}
+.prog .sub{font-size:11.5px;font-style:italic;color:var(--light)}
+.okbox{border:2px solid var(--grn);border-radius:4px;padding:12px;margin-top:12px;background:#E3EFE5}
+.okbox h4{margin:0 0 4px;font-family:var(--t);letter-spacing:1px;text-transform:uppercase;color:var(--grn)}
+.warnlist{font-size:12.5px;color:var(--muted);margin:8px 0 0;padding-left:18px}
+.errbox{border:2px solid var(--red);color:var(--red);border-radius:4px;padding:10px 12px;margin-top:12px;font-size:13.5px}
 
 /* ---------- recherche / segments ---------- */
 .search{display:flex;align-items:center;gap:8px;background:var(--paper);border:1.5px solid var(--ink);border-radius:4px;padding:8px 10px;margin-bottom:10px}
@@ -224,9 +241,9 @@ textarea.field{min-height:70px;resize:vertical}
 <script>
 /* ================= CONFIG ================= */
 // Colle ici l'URL de ton déploiement Apps Script (…/exec). Sinon l'app te la demandera à la première ouverture.
-const API_URL = 'https://script.google.com/macros/s/AKfycbyGtccI791IMGz16OeeFcvGwjfltVDQCBT22dRm8T3UGpL5IAl4lY_PFO2BzR8YfE-52A/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbx8wR1eyUo6TaMq4kYvCpo_4YWLa7YMsT1acAuvW7QC9mUa8ll0_VzIwCo1ZfaeuEt-yQ/exec';
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1iy3H37w2_-2DAS21jzTKz2N_3QewGSZgVtQ7Thl0BKA/edit';
-const VERSION = '1.0';
+const VERSION = '1.1';
 
 /* ================= OUTILS ================= */
 const $ = s => document.querySelector(s);
@@ -507,6 +524,7 @@ function vInventaire() {
   const sansPhoto = I.filter(b => !b.photo).length, sansPrix = I.filter(b => !b.prix).length, star = I.filter(b => b.garantie > 2).length;
   let h = `<div class="ink" style="margin-bottom:12px"><div class="lab">Valeur du mobilier</div><div class="val">${e0(val)} <span style="font-size:14px;font-weight:400;color:var(--light)">/ ${e0(pf)}</span></div>
     <div class="gauge"><i style="width:${Math.min(pct, 100)}%;background:${pct >= 90 ? 'var(--ora)' : 'var(--yel)'}"></i></div><div class="sub">${I.length} biens · ${pct} % du plafond MAIF · hors travaux</div></div>`;
+  h += `<button class="expbtn" data-act="export"><span class="ic">📄</span><span><b>Dossier pour l'assurance</b><small>PDF ou Word · fiches, photos et factures</small></span><span class="chev">›</span></button>`;
   h += `<div class="search">${ICON.search}<input id="iq" type="search" placeholder="Chercher un objet, une marque, un magasin…" value="${esc(S.iq)}"></div>`;
   const pieces = [...new Set(I.map(b => b.piece))].sort((a, b) => (S.d.listes.pieces.indexOf(a) + 99) % 99 - (S.d.listes.pieces.indexOf(b) + 99) % 99);
   h += `<div class="chips"><button class="chip ${!S.iPiece ? 'on' : ''}" data-act="ipiece" data-p="">Toutes</button>${pieces.map(p => `<button class="chip ${S.iPiece === p ? 'on' : ''}" data-act="ipiece" data-p="${esc(p)}">${esc(p)}<small>${I.filter(b => b.piece === p).length}</small></button>`).join('')}</div>`;
@@ -748,6 +766,62 @@ function supprimerContact() {
   rendre(true); toast('Contact supprimé');
 }
 
+/* ---------- export du dossier (PDF / Word) ---------- */
+function ouvrirExport() {
+  S.form = { mode: 'export', pieces: new Set(S.iPiece ? [S.iPiece] : []), annexes: true, st: S.expSt || null, dernier: S.expDernier || null, charge: !S.expSt };
+  ouvrir(''); rendreExport(); suivreExport();
+}
+function rendreExport() {
+  const f = S.form; if (!f || f.mode !== 'export') return;
+  const I = S.d.inventaire, L = S.d.listes.pieces.filter(p => I.some(b => b.piece === p));
+  I.forEach(b => { if (L.indexOf(b.piece) < 0) L.push(b.piece); });
+  const sel = I.filter(b => !f.pieces.size || f.pieces.has(b.piece));
+  const st = f.st, enCours = st && (st.etat === 'attente' || st.etat === 'en cours');
+  const ago = iso => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? "à l'instant" : m < 60 ? 'il y a ' + m + ' min' : new Date(iso).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }); };
+  let h = tete('Dossier pour l\'assurance', 'Couverture, récap par pièce, une fiche par bien avec ses photos, puis les factures en annexe');
+  if (!enCours) {
+    h += `<div class="lbl">Pièces</div><div class="chips wrap"><button class="chip ${!f.pieces.size ? 'on' : ''}" data-act="x-piece" data-p="">Toutes</button>${L.map(p => `<button class="chip ${f.pieces.has(p) ? 'on' : ''}" data-act="x-piece" data-p="${esc(p)}">${esc(p)}<small>${I.filter(b => b.piece === p).length}</small></button>`).join('')}</div>
+    <div class="lbl">Factures</div><div class="chips wrap"><button class="chip ${f.annexes ? 'on' : ''}" data-act="x-ann" data-v="1">Jointes en annexe</button><button class="chip ${!f.annexes ? 'on' : ''}" data-act="x-ann" data-v="0">Fiches seules</button></div>
+    <div class="kv" style="margin-top:10px"><div>Biens</div><div><b>${sel.length}</b> · ${e0(sel.filter(b => b.categorie !== 'Travaux').reduce((s, b) => s + (Number(b.prix) || 0), 0))}</div>
+    <div>Avec facture</div><div>${sel.filter(b => b.facture).length} / ${sel.length}</div><div>Avec photo</div><div>${sel.filter(b => b.photo).length} / ${sel.length}</div></div>
+    <button class="go" data-act="x-go" ${sel.length && !f.envoi ? '' : 'disabled'}>${f.envoi ? 'Lancement…' : '📄 Générer le dossier'}</button>
+    <p class="muted" style="font-size:12.5px;font-style:italic;margin:8px 2px 0">Génération en arrière-plan : quelques minutes la première fois (les factures sont récupérées dans Gmail et le Drive), plus rapide ensuite. Un mail arrive avec les liens.</p>`;
+  }
+  if (f.charge) h += `<div class="empty">Vérification des exports…</div>`;
+  if (enCours) h += `<div class="prog"><div class="lab">Export en cours${st.pieces && st.pieces.length ? ' · ' + esc(st.pieces.join(', ')) : ''}</div><div class="et">${esc(st.etape || '…')}</div>
+    <div class="gauge run"><i style="width:${Math.max(4, st.pct || 0)}%"></i></div><div class="sub">${st.pct || 0} % · tu peux fermer l'appli, le mail suivra</div></div>`;
+  if (st && st.etat === 'termine') h += `<div class="okbox"><h4>✓ Dossier prêt</h4><div style="font-size:13.5px">${st.nbBiens} biens · ${st.nbAnnexes}${st.nbAnnexesPrevues ? '/' + st.nbAnnexesPrevues : ''} factures en annexe${st.pagesAnnexes ? ' (' + st.pagesAnnexes + ' p.)' : ''} · ${ago(st.fin)}</div>
+    ${(st.avertissements || []).length ? `<ul class="warnlist">${st.avertissements.map(a => `<li>${esc(a)}</li>`).join('')}</ul>` : ''}</div>
+    <a class="go" href="${esc(st.pdf)}" target="_blank" rel="noopener">Ouvrir le PDF</a>
+    <div class="btnrow">${st.docx ? `<a class="go sec2" href="${esc(st.docx)}" target="_blank" rel="noopener">Version Word</a>` : ''}<a class="go sec2" href="${esc(st.dossier)}" target="_blank" rel="noopener">Dossier Drive</a></div>`;
+  else if (st && st.etat === 'erreur') h += `<div class="errbox"><b>L'export a échoué</b><br>${esc(st.message || '')}</div>`;
+  if (f.dernier && !(st && st.etat === 'termine')) h += `<div class="lbl">Dernier dossier</div><div class="list"><a class="item tap" href="${esc(f.dernier.pdf)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><div class="grow"><div class="ttl">${esc((f.dernier.pieces || []).length ? f.dernier.pieces.join(', ') : 'Inventaire complet')}</div><div class="desc">${f.dernier.nbBiens} biens · ${f.dernier.nbAnnexes} factures · ${ago(f.dernier.fin)}</div></div><span class="badge">PDF ›</span></a></div>`;
+  $('#sheetIn').innerHTML = h;
+}
+async function suivreExport() {
+  if (S.expPoll) return; S.expPoll = true;
+  try {
+    while (S.form && S.form.mode === 'export') {
+      let r = null;
+      try { r = await api('export-statut'); } catch (e) { if (S.form) { S.form.charge = false; rendreExport(); } toast('Connexion impossible'); break; }
+      if (!S.form || S.form.mode !== 'export') break;
+      if (!r.ok) { S.form.charge = false; rendreExport(); if (r.error === 'ACTION') toast('Mets à jour le script (Export.gs)'); break; }
+      S.expSt = S.form.st = r.statut; S.expDernier = S.form.dernier = r.dernier; S.form.charge = false; rendreExport();
+      if (!r.statut || (r.statut.etat !== 'attente' && r.statut.etat !== 'en cours')) break;
+      await new Promise(ok => setTimeout(ok, 4000));
+    }
+  } finally { S.expPoll = false; }
+}
+async function lancerExport() {
+  const f = S.form; f.envoi = true; rendreExport();
+  try {
+    const r = await api('export', { pieces: [...f.pieces], annexes: f.annexes });
+    f.envoi = false;
+    if (!r.ok && r.error !== 'EN_COURS') { toast(r.error === 'ACTION' ? 'Mets à jour le script (Export.gs)' : 'Échec : ' + r.message); rendreExport(); return; }
+    S.expSt = f.st = r.statut; rendreExport(); suivreExport();
+  } catch (e) { f.envoi = false; rendreExport(); toast('Connexion impossible'); }
+}
+
 /* ---------- réglages ---------- */
 function ouvrirReglages() {
   const sv = (S.d && S.d.serveur) || {};
@@ -839,6 +913,10 @@ document.addEventListener('click', ev => {
     case 'c-del': supprimerContact(); break;
     case 'refresh': fermer(); S.lastFetch = 0; rafraichir(true); toast('Actualisation…'); break;
     case 'mailtest': api('mail-test').then(r => toast(r.ok ? '📧 Mail de test envoyé' : 'Échec : ' + r.message)).catch(() => toast('Connexion impossible')); break;
+    case 'export': ouvrirExport(); break;
+    case 'x-piece': { const p = el.dataset.p, P = S.form.pieces; if (!p) P.clear(); else if (P.has(p)) P.delete(p); else P.add(p); rendreExport(); break; }
+    case 'x-ann': S.form.annexes = el.dataset.v === '1'; rendreExport(); break;
+    case 'x-go': lancerExport(); break;
     case 'logout': fermer(); LS.del('key'); S.key = ''; verrouiller(); break;
   }
 });
