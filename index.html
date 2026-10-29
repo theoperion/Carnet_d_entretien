@@ -1,0 +1,865 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#22252A">
+<title>Carnet T3</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;700&family=Roboto+Condensed:ital,wght@0,400;0,700;1,400&family=Roboto+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --kraft:#EFE6D2;--paper:#FBF7EE;--paper2:#F3ECDD;--ink:#22252A;--ink2:#3A3E45;
+  --yel:#F5B700;--ora:#E2571E;--red:#C2362B;--grn:#2F7A4A;--grey:#CFC5B0;
+  --rule:#CDBF9F;--muted:#6E6556;--light:#B9B2A3;
+  --t:'Oswald',Impact,sans-serif;--b:'Roboto Condensed',Arial Narrow,sans-serif;--m:'Roboto Mono',ui-monospace,monospace;
+  --safeB:env(safe-area-inset-bottom,0px);--safeT:env(safe-area-inset-top,0px);
+  --stripe:repeating-linear-gradient(-45deg,var(--yel) 0 9px,var(--ink) 9px 18px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--kraft);color:var(--ink);font-family:var(--b);font-size:15px;line-height:1.4}
+body{background-image:radial-gradient(rgba(110,101,86,.07) 1px,transparent 1px);background-size:4px 4px}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;touch-action:manipulation}
+input,select,textarea{font:inherit;color:inherit}
+a{color:inherit}
+a.go,a.mini{text-decoration:none}
+.mono{font-family:var(--m);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.app{max-width:520px;margin:0 auto;min-height:100dvh;padding-bottom:calc(92px + var(--safeB))}
+
+/* ---------- en-tête ---------- */
+header{position:sticky;top:0;z-index:20;background:var(--ink);color:#fff;padding:calc(10px + var(--safeT)) 16px 0}
+.hrow{display:flex;align-items:center;gap:10px;padding-bottom:10px}
+.htitle{flex:1;min-width:0}
+.htitle h1{margin:0;font-family:var(--t);font-weight:700;font-size:22px;letter-spacing:1px;line-height:1.1;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.htitle p{margin:2px 0 0;color:var(--yel);font-style:italic;font-size:12.5px}
+.ibtn{width:38px;height:38px;display:grid;place-items:center;border-radius:8px;position:relative;color:#fff}
+.ibtn:active{background:var(--ink2)}
+.dot{position:absolute;top:8px;right:7px;width:8px;height:8px;border-radius:50%;background:var(--grn);box-shadow:0 0 0 2px var(--ink)}
+.dot.sync{background:var(--yel);animation:pulse 1s infinite}.dot.off{background:var(--red)}
+@keyframes pulse{50%{opacity:.35}}
+.stripe{height:9px;background:var(--stripe);margin:0 -16px}
+
+main{padding:14px 14px 0}
+.view{animation:fade .18s ease-out}
+@keyframes fade{from{opacity:.3;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---------- titres de section ---------- */
+.sec{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin:22px 0 10px;border-bottom:3px solid var(--yel);padding-bottom:4px}
+.sec h2{margin:0;font-family:var(--t);font-weight:700;font-size:17px;letter-spacing:.6px;text-transform:uppercase}
+.sec .lnk{font-family:var(--t);font-size:12px;letter-spacing:.8px;color:var(--muted);text-transform:uppercase;padding:4px 0}
+.sec:first-child{margin-top:4px}
+
+/* ---------- tampons d'état ---------- */
+.stamp{display:inline-block;font-family:var(--t);font-weight:500;font-size:11px;letter-spacing:1px;text-transform:uppercase;padding:3px 7px 2px;border:2px solid currentColor;border-radius:3px;transform:rotate(-2deg);white-space:nowrap;line-height:1.2}
+.st-RETARD{color:#fff;background:var(--red);border-color:var(--red)}
+.st-BIENTOT{color:var(--ink);background:var(--yel);border-color:var(--yel)}
+.st-RAS{color:#fff;background:var(--grn);border-color:var(--grn)}
+.st-PLANIF{color:var(--ink);background:var(--grey);border-color:var(--grey)}
+.st-COUVERTE{color:var(--grn)}.st-EXPIREBIENTOT{color:#9A6B00}.st-EXPIREE{color:var(--red)}
+
+/* ---------- cartes chiffres ---------- */
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi{border-radius:4px;padding:12px 12px 10px;text-align:left;position:relative;overflow:hidden;min-height:96px;display:flex;flex-direction:column;justify-content:space-between}
+.kpi .lab{font-family:var(--t);font-size:12px;letter-spacing:1px;text-transform:uppercase;opacity:.92}
+.kpi .val{font-family:var(--t);font-weight:700;font-size:40px;line-height:1}
+.kpi .sub{font-size:11.5px;font-style:italic;opacity:.85}
+.k-red{background:var(--red);color:#fff}.k-yel{background:var(--yel);color:var(--ink)}.k-grn{background:var(--grn);color:#fff}.k-grey{background:var(--grey);color:var(--ink)}
+.kpi:active{filter:brightness(.94)}
+.inkcards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.ink{background:var(--ink);color:#fff;border-radius:4px;padding:12px}
+.ink .lab{font-family:var(--t);font-size:12px;letter-spacing:1px;color:var(--yel);text-transform:uppercase}
+.ink .val{font-family:var(--t);font-weight:700;font-size:28px;line-height:1.15}
+.ink .sub{font-size:11.5px;font-style:italic;color:var(--light)}
+.wide{grid-column:1/-1}
+.gauge{height:9px;background:#3A3E45;border-radius:2px;margin:8px 0 6px;overflow:hidden;position:relative}
+.gauge>i{display:block;height:100%;background:var(--yel)}
+.gauge.light{background:var(--paper2)}
+.gauge.light>i{background:var(--grn)}
+
+/* ---------- listes ---------- */
+.list{background:var(--paper);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.item{display:flex;gap:10px;align-items:center;padding:11px 12px;border-bottom:1px dashed var(--rule);position:relative}
+.item:last-child{border-bottom:0}
+.item.tap:active{background:var(--paper2)}
+.item .bar{position:absolute;left:0;top:0;bottom:0;width:4px}
+.item .grow{flex:1;min-width:0}
+.ttl{font-weight:700;font-size:15px;line-height:1.25}
+.desc{color:var(--muted);font-size:13px;line-height:1.3;margin-top:2px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:6px;font-size:12px;color:var(--muted)}
+.when{font-family:var(--m);font-size:12px;text-align:right;white-space:nowrap}
+.when b{display:block;font-size:13px;color:var(--ink)}
+.empty{padding:22px 14px;text-align:center;color:var(--muted);font-style:italic}
+.rowline{display:flex;align-items:center;gap:10px}
+
+/* ---------- puces ---------- */
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:none;margin:0 -14px;padding-left:14px;padding-right:14px}
+.chips::-webkit-scrollbar{display:none}
+.chips.wrap{flex-wrap:wrap;margin:0;padding:2px 0 6px;overflow:visible}
+.chip{flex:none;font-family:var(--t);font-size:12.5px;letter-spacing:.5px;text-transform:uppercase;border:1.5px solid var(--ink);border-radius:20px;padding:5px 11px 4px;background:var(--paper);white-space:nowrap}
+.chip.on{background:var(--ink);color:var(--yel)}
+.chip small{font-family:var(--m);font-size:10.5px;opacity:.7;margin-left:3px}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:3px;white-space:nowrap;line-height:1.35}
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:11.5px;padding:1px 6px;border:1px solid var(--rule);border-radius:3px;background:var(--paper2);white-space:nowrap}
+.badge.warn{border-color:var(--ora);color:var(--ora);background:transparent}
+.badge.star{border-color:var(--grn);color:var(--grn);font-weight:700;background:#E3EFE5}
+
+/* ---------- boutons ---------- */
+.fait{flex:none;font-family:var(--t);font-weight:500;letter-spacing:1px;font-size:13px;background:var(--ink);color:var(--yel);padding:9px 11px 8px;border-radius:4px;display:flex;align-items:center;gap:5px}
+.fait:active{transform:scale(.96)}
+.fait .i{width:16px;height:16px;stroke-width:2.6}
+.go{display:block;width:100%;font-family:var(--t);font-weight:700;font-size:16px;letter-spacing:1.5px;text-transform:uppercase;background:var(--ink);color:var(--yel);padding:14px;border-radius:4px;text-align:center;margin-top:12px}
+.go:active{transform:scale(.985)}
+.go.sec2{background:var(--paper);color:var(--ink);border:2px solid var(--ink)}
+.go.danger{background:transparent;color:var(--red);border:2px solid var(--red)}
+.go.armed{background:var(--red);color:#fff}
+.go[disabled]{opacity:.5}
+.btnrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btnrow .go{margin-top:8px;font-size:14px;padding:12px 8px}
+.mini{font-family:var(--t);font-size:12px;letter-spacing:.8px;text-transform:uppercase;border:1.5px solid var(--ink);border-radius:4px;padding:6px 10px 5px;background:var(--paper);display:inline-flex;align-items:center;gap:6px}
+.mini .i{width:16px;height:16px}
+
+/* ---------- recherche / segments ---------- */
+.search{display:flex;align-items:center;gap:8px;background:var(--paper);border:1.5px solid var(--ink);border-radius:4px;padding:8px 10px;margin-bottom:10px}
+.search input{border:0;background:none;outline:0;flex:1;font-size:15px;min-width:0}
+.seg{display:flex;background:var(--paper);border:1.5px solid var(--ink);border-radius:4px;overflow:hidden;margin-bottom:10px}
+.seg button{flex:1;font-family:var(--t);font-size:12px;letter-spacing:.6px;padding:8px 2px 7px;text-transform:uppercase;border-right:1.5px solid var(--ink)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--ink);color:var(--yel)}
+.seg small{font-family:var(--m);font-size:10px;display:block;opacity:.75}
+
+/* ---------- zones (jauges) ---------- */
+.zline{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px dashed var(--rule)}
+.zline:last-child{border-bottom:0}
+.zline .zn{flex:1;font-weight:700;font-size:14px}
+.zline .gg{font-family:var(--m);letter-spacing:-1px;font-size:14px;color:var(--grn)}
+.zline .gg.bad{color:var(--ora)}
+.zline .pc{font-family:var(--m);font-size:12px;width:38px;text-align:right}
+
+/* ---------- barre du bas ---------- */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--ink);padding:6px 6px calc(8px + var(--safeB));display:flex;justify-content:space-around;align-items:flex-end;max-width:520px;margin:0 auto;border-top:4px solid var(--yel)}
+.tab{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--light);font-family:var(--t);font-size:10px;letter-spacing:.4px;padding:4px 0}
+.tab.on{color:var(--yel)}
+.plus{flex:none;width:58px;height:58px;border-radius:50%;background:var(--yel);color:var(--ink);display:grid;place-items:center;margin:-26px 6px 2px;box-shadow:0 0 0 5px var(--ink),0 4px 10px rgba(0,0,0,.35)}
+.plus .i{width:28px;height:28px;stroke-width:2.4}
+.plus:active{transform:scale(.94)}
+
+/* ---------- feuilles (bottom sheet) ---------- */
+.veil{position:fixed;inset:0;background:rgba(34,37,42,.5);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s}
+.veil.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;max-width:520px;margin:0 auto;background:var(--paper);border-radius:12px 12px 0 0;max-height:92dvh;overflow:auto;transform:translateY(105%);transition:transform .25s cubic-bezier(.2,.8,.2,1);padding:0 16px calc(18px + var(--safeB))}
+.sheet.on{transform:none}
+.shead{position:sticky;top:0;background:var(--paper);padding:10px 0 10px;z-index:2;display:flex;align-items:flex-start;gap:8px;border-bottom:3px solid var(--yel);margin-bottom:12px}
+.shead .grab{position:absolute;top:5px;left:50%;width:40px;height:4px;margin-left:-20px;border-radius:2px;background:var(--rule)}
+.shead h3{flex:1;margin:10px 0 0;font-family:var(--t);font-weight:700;font-size:19px;text-transform:uppercase;letter-spacing:.5px;line-height:1.15}
+.shead .ibtn{color:var(--ink);margin-top:4px}
+.lbl{font-family:var(--t);font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+.field{width:100%;background:#fff;border:1.5px solid var(--rule);border-radius:4px;padding:10px;font-size:15px;outline:0}
+.field:focus{border-color:var(--ink)}
+textarea.field{min-height:70px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kv{display:grid;grid-template-columns:118px 1fr;gap:0;border:1px solid var(--rule);border-radius:4px;overflow:hidden;background:#fff}
+.kv>div{padding:8px 10px;border-bottom:1px dashed var(--rule);font-size:14px}
+.kv>div:nth-child(odd){font-family:var(--t);font-size:11.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);background:var(--paper2)}
+.kv>div:nth-last-child(-n+2){border-bottom:0}
+.note{background:var(--paper2);border-left:4px solid var(--yel);padding:10px 12px;font-size:13.5px;margin-top:12px;border-radius:0 4px 4px 0}
+.stepper{display:flex;align-items:center;border:1.5px solid var(--ink);border-radius:4px;overflow:hidden;width:max-content;background:#fff}
+.stepper button{width:42px;height:40px;font-size:20px;font-weight:700}
+.stepper span{min-width:70px;text-align:center;font-family:var(--m);font-weight:600}
+.pick{max-height:52dvh;overflow:auto;border:1px solid var(--rule);border-radius:4px;background:#fff}
+.pick .grp{position:sticky;top:0;background:var(--paper2);font-family:var(--t);font-size:12px;letter-spacing:1px;text-transform:uppercase;padding:6px 10px;border-bottom:1px solid var(--rule)}
+.pick button{display:flex;width:100%;text-align:left;gap:8px;align-items:center;padding:10px;border-bottom:1px dashed var(--rule)}
+.pick button:active{background:var(--paper2)}
+
+/* ---------- divers ---------- */
+.toast{position:fixed;left:50%;bottom:calc(98px + var(--safeB));transform:translate(-50%,20px);width:max-content;min-width:min(300px,92vw);background:var(--ink);color:#fff;padding:10px 14px;border-radius:4px;z-index:60;display:flex;gap:14px;align-items:center;opacity:0;pointer-events:none;transition:all .2s;max-width:92vw;box-shadow:0 4px 14px rgba(0,0,0,.3);border-left:5px solid var(--yel)}
+.toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.toast button{color:var(--yel);font-family:var(--t);letter-spacing:1px;font-size:13px}
+#lock{position:fixed;inset:0;z-index:80;background:var(--kraft);display:grid;place-items:center;padding:24px}
+#lock[hidden]{display:none}
+#lock .in{width:100%;max-width:340px;text-align:center}
+#lock img{width:96px;height:96px;border-radius:22px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+#lock h1{font-family:var(--t);font-weight:700;font-size:26px;letter-spacing:1.5px;margin:18px 0 2px;text-transform:uppercase}
+#lock .field{text-align:center;margin-top:10px;font-family:var(--m)}
+.err{color:var(--red);min-height:20px;margin-top:8px;font-size:13.5px}
+.pending{opacity:.6}
+.photo-busy{display:flex;align-items:center;gap:10px;padding:10px;background:var(--paper2);border-radius:4px;margin-top:10px;font-size:13.5px}
+.spin{width:18px;height:18px;border:3px solid var(--rule);border-top-color:var(--ink);border-radius:50%;animation:sp 0.8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.month{font-family:var(--t);font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:16px 2px 6px;display:flex;justify-content:space-between}
+.foot{text-align:center;color:var(--muted);font-size:11.5px;margin:22px 0 4px;font-style:italic}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="hrow">
+      <div class="htitle"><h1 id="htitle">Carnet · T3</h1><p id="hsub"></p></div>
+      <button class="ibtn" data-act="gear" aria-label="Réglages"><svg class="i" viewBox="0 0 24 24"><path d="M10.3 4.3c.4-1.8 3-1.8 3.4 0a1.7 1.7 0 0 0 2.6 1.1c1.5-.9 3.3.8 2.4 2.4a1.7 1.7 0 0 0 1 2.5c1.9.5 1.9 3.1 0 3.5a1.7 1.7 0 0 0-1 2.6c.9 1.5-.9 3.3-2.4 2.4a1.7 1.7 0 0 0-2.6 1c-.4 1.9-3 1.9-3.4 0a1.7 1.7 0 0 0-2.6-1c-1.5.9-3.3-.9-2.4-2.4a1.7 1.7 0 0 0-1-2.6c-1.9-.4-1.9-3 0-3.5a1.7 1.7 0 0 0 1-2.5c-.9-1.6.9-3.3 2.4-2.4a1.7 1.7 0 0 0 2.6-1.1z"/><circle cx="12" cy="12" r="3"/></svg><span class="dot" id="dot"></span></button>
+    </div>
+    <div class="stripe"></div>
+  </header>
+  <main id="main"></main>
+</div>
+
+<nav class="tabs" id="tabs">
+  <button class="tab" data-act="tab:bord"><svg class="i" viewBox="0 0 24 24"><path d="M5 17a8 8 0 1 1 14 0"/><path d="M12 13l3.5-4"/><circle cx="12" cy="13" r="1"/></svg>BORD</button>
+  <button class="tab" data-act="tab:entretien"><svg class="i" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.2 5.2l-5.8 5.8a1.8 1.8 0 0 0 2.5 2.5l5.8-5.8a4 4 0 0 0 5.2-5.2l-2.5 2.5-2.3-.6-.6-2.3z"/></svg>ENTRETIEN</button>
+  <button class="plus" data-act="plus" aria-label="Noter un passage"><svg class="i" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
+  <button class="tab" data-act="tab:histo"><svg class="i" viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 10h6M9 14h6M9 18h3"/></svg>HISTORIQUE</button>
+  <button class="tab" data-act="tab:inventaire"><svg class="i" viewBox="0 0 24 24"><path d="M4 8l8-4 8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/></svg>INVENTAIRE</button>
+</nav>
+
+<div class="veil" id="veil" data-act="close"></div>
+<div class="sheet" id="sheet"><div id="sheetIn"></div></div>
+<div class="toast" id="toast"><span id="toastT"></span><button id="toastB" hidden></button></div>
+<input type="file" id="fileIn" accept="image/*" capture="environment" hidden>
+<div id="lock" hidden></div>
+
+<script>
+/* ================= CONFIG ================= */
+// Colle ici l'URL de ton déploiement Apps Script (…/exec). Sinon l'app te la demandera à la première ouverture.
+const API_URL = 'COLLE_ICI_L_URL_DE_L_APPLICATION_WEB';
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1iy3H37w2_-2DAS21jzTKz2N_3QewGSZgVtQ7Thl0BKA/edit';
+const VERSION = '1.0';
+
+/* ================= OUTILS ================= */
+const $ = s => document.querySelector(s);
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem('carnet.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('carnet.' + k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem('carnet.' + k); } catch (e) {} }
+};
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+const uid = () => 'l' + Math.random().toString(36).slice(2, 9);
+const pad = n => String(n).padStart(2, '0');
+const isoOf = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const dOf = s => { const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; };
+const today = () => isoOf(new Date());
+const addDays = (s, n) => { const d = dOf(s); d.setDate(d.getDate() + n); return isoOf(d); };
+const diffJ = (a, b) => Math.round((dOf(a) - dOf(b)) / 864e5);
+function edate(s, m) { // EDATE comme Google Sheets (fin de mois bornée)
+  const d = dOf(s), y = d.getFullYear(), mo = d.getMonth() + m, last = new Date(y, mo + 1, 0).getDate();
+  return isoOf(new Date(y, mo, Math.min(d.getDate(), last)));
+}
+const MOIS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+const JOURS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+const fr = s => { const d = dOf(s); return d ? pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() : '—'; };
+const frCourt = s => { const d = dOf(s); return d ? pad(d.getDate()) + '/' + pad(d.getMonth() + 1) : '—'; };
+const frLong = s => { const d = dOf(s); return d ? JOURS[d.getDay()] + ' ' + d.getDate() + ' ' + MOIS[d.getMonth()] + ' ' + d.getFullYear() : ''; };
+const E0 = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }), E2 = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const e0 = v => E0.format(Math.round(v || 0)) + ' €';
+const e2 = v => E2.format(v || 0) + ' €';
+const ech = j => j == null ? '' : j < 0 ? 'retard ' + (-j) + ' j' : j === 0 ? "aujourd'hui" : 'dans ' + j + ' j';
+const freqTxt = n => !n ? '—' : n === 1 ? 'Chaque mois' : n === 12 ? 'Chaque année' : n === 24 ? 'Tous les 2 ans' : 'Tous les ' + n + ' mois';
+
+const ICON = {
+  check: '<svg class="i" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  close: '<svg class="i" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  search: '<svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>',
+  cam: '<svg class="i" viewBox="0 0 24 24"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  doc: '<svg class="i" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>',
+  folder: '<svg class="i" viewBox="0 0 24 24"><path d="M3 6h7l2 2h9v11H3z"/></svg>',
+  edit: '<svg class="i" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
+  phone: '<svg class="i" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>',
+  mail: '<svg class="i" viewBox="0 0 24 24"><path d="M3 6h18v12H3z"/><path d="M3 7l9 6 9-6"/></svg>',
+  plus: '<svg class="i" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+  tool: '<svg class="i" viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M14.7 6.3a4 4 0 0 0-5.2 5.2l-5.8 5.8a1.8 1.8 0 0 0 2.5 2.5l5.8-5.8a4 4 0 0 0 5.2-5.2l-2.5 2.5-2.3-.6-.6-2.3z"/></svg>'
+};
+
+/* couleurs des zones (comme dans le fichier) */
+const ZC = [['Cuisine', '#F6D5B8', '#8A3B12'], ['Salle de bain', '#CFE3EA', '#1F5A6E'], ['Ventilation', '#D4E6D3', '#2D5E3A'], ['Sécurité', '#F2C9C2', '#8E2A20'],
+  ['Menuiseries', '#E2D6C2', '#5B4630'], ['Extérieur', '#DCE5C1', '#4E5E1E'], ['électroménager', '#F5E3A8', '#6B5200'], ['Aquarium', '#C9E4E6', '#14606A']];
+const PC = { 'Salon': ['#F6D4B8', '#893A12'], 'Salle ciné': ['#2B334A', '#F4D67F'], 'Cuisine': ['#F5E2A8', '#6B5200'], 'Salle de bain': ['#CFE2EA', '#1F5A6D'],
+  'Chambre': ['#E1D5C2', '#5B462F'], 'Entrée': ['#D3E6D2', '#2C5E39'], 'Balcon': ['#DCE4C1', '#4E5E1E'], 'Toute la maison': ['#E6E0F1', '#4A3978'], 'À préciser': ['#F5B700', '#22252A'], 'Bureau': ['#E5DFD0', '#3A3E45'] };
+const zoneTag = z => { const c = ZC.find(x => String(z).includes(x[0])) || ['', '#E5DFD0', '#3A3E45']; return `<span class="tag" style="background:${c[1]};color:${c[2]}">${esc(z)}</span>`; };
+const pieceTag = p => { const c = PC[p] || ['#E5DFD0', '#3A3E45']; return `<span class="tag" style="background:${c[0]};color:${c[1]}">${esc(p || '—')}</span>`; };
+const ETATS = { 'EN RETARD': ['RETARD', 'var(--red)'], 'BIENTÔT': ['BIENTOT', 'var(--yel)'], 'RAS': ['RAS', 'var(--grn)'], 'À PLANIFIER': ['PLANIF', 'var(--grey)'] };
+const stamp = e => e ? `<span class="stamp st-${(ETATS[e] || ['PLANIF'])[0]}">${esc(e)}</span>` : '';
+const gStamp = s => s ? `<span class="stamp st-${s.replace(/[\sÉÔ]/g, m => m === ' ' ? '' : m === 'É' ? 'E' : 'O')}">${esc(s)}</span>` : '';
+
+/* ================= ÉTAT ================= */
+const S = {
+  d: null, key: LS.get('key', ''), url: LS.get('url', ''), queue: LS.get('queue', []),
+  tab: LS.get('tab', 'bord'), fEt: 'TOUT', fZone: null, vue: 'urgence',
+  hZone: null, iq: '', iPiece: null, iFiltre: null, form: null, busy: false, lastFetch: 0
+};
+(function () { const c = LS.get('cache', null); if (c) S.d = c; })();
+const apiUrl = () => (API_URL && !API_URL.startsWith('COLLE')) ? API_URL : S.url;
+function sauver() { LS.set('cache', S.d); LS.set('queue', S.queue); }
+
+/* ================= CALCULS ================= */
+function etatDe(t) {
+  if (!t.dernier) return 'À PLANIFIER';
+  if (t.prochain < today()) return 'EN RETARD';
+  if (t.prochain <= addDays(today(), 30)) return 'BIENTÔT';
+  return 'RAS';
+}
+function recalc(t) { // recalcule une tâche à partir de l'historique local (comme les formules du fichier)
+  const h = S.d.historique.filter(x => x.element === t.element && !x.deleted);
+  t.dernier = h.reduce((m, x) => x.date > m ? x.date : m, '');
+  t.prochain = t.dernier && t.freq ? edate(t.dernier, t.freq) : '';
+  t.jours = t.prochain ? diffJ(t.prochain, today()) : null;
+  t.etat = etatDe(t);
+}
+function rafraichirEtats() { if (!S.d) return; S.d.entretien.forEach(t => { t.jours = t.prochain ? diffJ(t.prochain, today()) : null; t.etat = etatDe(t); }); }
+const ordreUrg = (a, b) => (a.prochain || '0000') < (b.prochain || '0000') ? -1 : (a.prochain || '0000') > (b.prochain || '0000') ? 1 : 0;
+const valeurMobilier = () => S.d.inventaire.filter(x => x.categorie !== 'Travaux').reduce((s, x) => s + (Number(x.prix) || 0), 0);
+const histo = () => S.d.historique.filter(x => !x.deleted);
+
+/* ================= API ================= */
+function api(action, extra) {
+  const body = JSON.stringify(Object.assign({ action, key: S.key }, extra || {}));
+  return fetch(apiUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body, redirect: 'follow' })
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+}
+function setSync(s) { $('#dot').className = 'dot' + (s === 'sync' ? ' sync' : s === 'off' ? ' off' : ''); }
+function charger(d) {
+  // conserve les passages locaux pas encore envoyés
+  const loc = S.d ? S.d.historique.filter(x => x.pending && !x.row) : [];
+  S.d = d; S.d.historique = d.historique.concat(loc.filter(l => !d.historique.some(h => h.row && h.element === l.element && h.date === l.date && !l.row)));
+  if (loc.length) S.d.entretien.forEach(recalc);
+  rafraichirEtats(); sauver();
+}
+async function rafraichir(force) {
+  if (!S.key || !apiUrl()) return;
+  if (S.queue.length) return pomper();
+  if (!force && Date.now() - S.lastFetch < 20000) return;
+  S.lastFetch = Date.now(); setSync('sync');
+  try {
+    const r = await api('data');
+    if (!r.ok) { if (r.error === 'CLE' || r.error === 'SANS_CLE') return verrouiller(r.message); throw new Error(r.message); }
+    if (S.queue.length) return;
+    charger(r.data); setSync('ok'); rendre(true);
+  } catch (e) { setSync('off'); }
+}
+
+/* file d'écritures : l'écran se met à jour tout de suite, l'envoi suit */
+function enfiler(op) { S.queue.push(op); sauver(); pomper(); }
+async function pomper() {
+  if (S.busy) return;
+  const op = S.queue[0];
+  if (!op) { setSync('ok'); setTimeout(() => rafraichir(true), 1200); return; }
+  S.busy = true; setSync('sync');
+  let res;
+  try {
+    if (op.op === 'fait') {
+      const h = op.h || S.d.historique.find(x => x.id === op.id);
+      if (!h || h.deleted) res = { ok: true, skip: true };
+      else {
+        res = await api('fait', { element: h.element, date: h.date, duree: h.duree });
+        if (res.ok) {
+          h.row = res.row; h.pending = false; h.srv = { date: h.date, element: h.element };
+          // annulé pendant l'envoi : on retire la ligne qui vient d'être écrite
+          if (h.deleted) { S.queue.push({ op: 'annuler', row: res.row, attendu: h.srv }); delete res.tache; }
+        }
+      }
+    } else if (op.op === 'annuler') {
+      res = await api('fait-annuler', { row: op.row, attendu: op.attendu });
+    } else if (op.op === 'maj') {
+      const h = S.d.historique.find(x => x.id === op.id);
+      if (!h || !h.row) res = { ok: true };
+      else { res = await api('passage-maj', { row: h.row, attendu: h.srv, date: h.date, duree: h.duree }); if (res.ok) { h.srv = { date: h.date, element: h.element }; h.pending = false; } }
+    } else {
+      res = await api(op.action, op.payload);
+      if (res.ok && op.after) apresAppel(op, res);
+    }
+  } catch (e) { S.busy = false; setSync('off'); setTimeout(pomper, 8000); return; }
+  S.queue.shift(); S.busy = false;
+  if (!res.ok) {
+    if (res.error === 'CLE') { sauver(); return verrouiller(res.message); }
+    toast('Pas enregistré dans le fichier : ' + (res.message || 'erreur'));
+    S.queue = []; sauver(); S.lastFetch = 0; rafraichir(true); return;
+  }
+  if (res.tache) { const t = S.d.entretien.find(x => x.element === res.tache.element); if (t && !S.queue.some(o => o.op === 'fait' || o.op === 'maj')) Object.assign(t, res.tache); }
+  sauver(); rendre(true); pomper();
+}
+function apresAppel(op, res) {
+  if (op.after === 'bien') {
+    const b = S.d.inventaire.find(x => x.id === op.id);
+    if (b && res.bien) Object.assign(b, res.bien, { pending: false });
+  }
+  if (op.after === 'contact') { const c = S.d.contacts.find(x => x.id === op.id); if (c) { c.row = res.row; c.pending = false; } }
+}
+
+/* ================= RENDU ================= */
+function rendre(silencieux) {
+  if (!S.d) { $('#main').innerHTML = '<div class="empty">Chargement du carnet…</div>'; return; }
+  rafraichirEtats();
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.act === 'tab:' + S.tab));
+  const T = { bord: ['Carnet · T3', 'Point du ' + frLong(today())], entretien: ['Entretien', 'Une tâche faite ? Appuie sur FAIT.'], histo: ['Historique', 'Tous les passages notés'], inventaire: ['Inventaire', 'Assurance MAIF · biens, factures, photos'] }[S.tab];
+  $('#htitle').textContent = T[0]; $('#hsub').textContent = T[1];
+  const y = scrollY;
+  $('#main').innerHTML = `<div class="view">${({ bord: vBord, entretien: vEntretien, histo: vHisto, inventaire: vInventaire })[S.tab]()}</div>`;
+  if (silencieux) scrollTo(0, y);
+  if (!silencieux) LS.set('tab', S.tab);
+}
+
+/* ---------- BORD ---------- */
+function vBord() {
+  const E = S.d.entretien, n = e => E.filter(t => t.etat === e).length;
+  const ret = n('EN RETARD'), bt = n('BIENTÔT'), ras = n('RAS'), pl = n('À PLANIFIER');
+  const ajour = E.length ? Math.round(100 * (E.length - ret) / E.length) : 100;
+  const H = histo(), m0 = today().slice(0, 7), an = addDays(today(), -365);
+  const ceMois = H.filter(h => h.date.slice(0, 7) === m0).length, sur12 = H.filter(h => h.date > an).length;
+  const val = valeurMobilier(), pf = S.d.plafond || 28000, pct = Math.round(100 * val / pf);
+  let h = `<div class="sec"><h2>Où en est le carnet</h2></div>
+  <div class="kpis">
+    <button class="kpi k-red" data-act="etat" data-e="EN RETARD"><span class="lab">En retard</span><span class="val">${ret}</span><span class="sub">à faire maintenant</span></button>
+    <button class="kpi k-yel" data-act="etat" data-e="BIENTÔT"><span class="lab">Sous 30 jours</span><span class="val">${bt}</span><span class="sub">à caler dans l'agenda</span></button>
+    <button class="kpi k-grn" data-act="etat" data-e="RAS"><span class="lab">RAS</span><span class="val">${ras}</span><span class="sub">rien à signaler</span></button>
+    <button class="kpi k-grey" data-act="etat" data-e="À PLANIFIER"><span class="lab">Jamais faites</span><span class="val">${pl}</span><span class="sub">à planifier une 1re fois</span></button>
+  </div>
+  <div class="inkcards">
+    <div class="ink"><div class="lab">Carnet à jour</div><div class="val">${ajour} %</div><div class="gauge"><i style="width:${ajour}%"></i></div><div class="sub">des tâches sans retard</div></div>
+    <div class="ink"><div class="lab">Passages</div><div class="val">${ceMois} <span style="font-size:15px;font-weight:400">ce mois</span></div><div class="sub">${sur12} sur les 12 derniers mois</div></div>
+    <button class="ink wide" data-act="tab:inventaire" style="text-align:left"><div class="lab">Valeur du mobilier</div><div class="val">${e0(val)} <span style="font-size:14px;font-weight:400;color:var(--light)">/ ${e0(pf)} assurés</span></div>
+      <div class="gauge"><i style="width:${Math.min(pct, 100)}%;background:${pct >= 90 ? 'var(--ora)' : 'var(--yel)'}"></i></div><div class="sub">${pct} % du plafond MAIF${pct >= 90 ? ' · pense à faire relever le plafond' : ''}</div></button>
+  </div>`;
+  const prochains = E.filter(t => t.prochain).sort(ordreUrg).slice(0, 6);
+  h += `<div class="sec"><h2>Prochains passages</h2><button class="lnk" data-act="tab:entretien">Tout voir ›</button></div><div class="list">`;
+  h += prochains.map(t => ligneTache(t, true)).join('') || '<div class="empty">Rien de prévu</div>';
+  h += '</div>';
+  // garanties à surveiller
+  const gs = S.d.inventaire.filter(b => b.statut === 'EXPIRE BIENTÔT').sort((a, b) => a.finGarantie < b.finGarantie ? -1 : 1);
+  if (gs.length) {
+    h += `<div class="sec"><h2>Garanties qui expirent</h2><span class="lnk">sous 3 mois</span></div><div class="list">` +
+      gs.map(b => `<div class="item tap" data-act="bien" data-id="${b.id}"><div class="grow"><div class="ttl">${esc(b.objet)}</div><div class="meta">${pieceTag(b.piece)}<span>${esc(b.marque || '')}</span></div></div><div class="when"><b>${fr(b.finGarantie)}</b>${gStamp(b.statut)}</div></div>`).join('') + '</div>';
+  }
+  // zones
+  const zones = [...new Set(E.map(t => t.zone))];
+  h += `<div class="sec"><h2>État par zone</h2></div><div class="list">` + zones.map(z => {
+    const tz = E.filter(t => t.zone === z), ok = tz.filter(t => t.etat !== 'EN RETARD').length, p = Math.round(100 * ok / tz.length), on = Math.round(p / 10);
+    return `<button class="zline" style="width:100%;text-align:left" data-act="zone" data-z="${esc(z)}"><span class="zn">${esc(z)}</span><span class="gg ${p < 100 ? 'bad' : ''}">${'▰'.repeat(on)}${'▱'.repeat(10 - on)}</span><span class="pc">${p}%</span></button>`;
+  }).join('') + '</div>';
+  // contacts
+  h += `<div class="sec"><h2>Contacts</h2><button class="lnk" data-act="contact-new">+ Ajouter</button></div><div class="list">` +
+    (S.d.contacts.length ? S.d.contacts.map(c => `<div class="item"><div class="grow tap" data-act="contact" data-id="${c.id}"><div class="ttl">${esc(c.nom || c.pourquoi)}</div><div class="desc">${esc(c.pourquoi)}${c.notes ? ' · ' + esc(c.notes) : ''}</div></div>
+      ${c.tel ? `<a class="mini" href="tel:${esc(c.tel.replace(/\s/g, ''))}">${ICON.phone}</a>` : ''}${c.mail ? `<a class="mini" href="mailto:${esc(c.mail)}">${ICON.mail}</a>` : ''}</div>`).join('') : '<div class="empty">Aucun contact</div>') + '</div>';
+  h += `<div class="foot">Fichier synchronisé · ${S.d.maj ? new Date(S.d.maj).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) : ''}</div>`;
+  return h;
+}
+function ligneTache(t, compact) {
+  const c = (ETATS[t.etat] || ['', 'var(--grey)'])[1];
+  return `<div class="item ${t.pending ? 'pending' : ''}"><span class="bar" style="background:${c}"></span>
+    <div class="grow tap" data-act="tache" data-el="${esc(t.element)}" style="padding-left:2px">
+      <div class="ttl">${esc(t.element)}</div>
+      ${compact ? '' : `<div class="desc">${esc(t.intervention)}</div>`}
+      <div class="meta">${compact ? zoneTag(t.zone) : ''}<span class="mono">${t.prochain ? frCourt(t.prochain) : '—'}</span><span class="mono" style="color:${t.etat === 'EN RETARD' ? 'var(--red)' : 'inherit'};font-weight:${t.etat === 'EN RETARD' ? 700 : 400}">${ech(t.jours)}</span>${stamp(t.etat)}</div>
+      ${!compact && t.outils ? `<div class="meta">${ICON.tool}<span>${esc(t.outils)}</span></div>` : ''}
+    </div>
+    <button class="fait" data-act="fait" data-el="${esc(t.element)}">${ICON.check}FAIT</button></div>`;
+}
+
+/* ---------- ENTRETIEN ---------- */
+function vEntretien() {
+  const E = S.d.entretien, c = e => E.filter(t => t.etat === e).length;
+  const segs = [['TOUT', E.length], ['EN RETARD', c('EN RETARD')], ['BIENTÔT', c('BIENTÔT')], ['RAS', c('RAS')]];
+  if (c('À PLANIFIER')) segs.push(['À PLANIFIER', c('À PLANIFIER')]);
+  let h = `<div class="seg">${segs.map(([k, n]) => `<button class="${S.fEt === k ? 'on' : ''}" data-act="fet" data-e="${k}">${k === 'À PLANIFIER' ? 'JAMAIS' : k}<small>${n}</small></button>`).join('')}</div>`;
+  const zones = [...new Set(E.map(t => t.zone))];
+  h += `<div class="chips"><button class="chip ${!S.fZone ? 'on' : ''}" data-act="fzone" data-z="">Toutes</button>${zones.map(z => `<button class="chip ${S.fZone === z ? 'on' : ''}" data-act="fzone" data-z="${esc(z)}">${esc(z)}</button>`).join('')}</div>`;
+  h += `<div class="rowline" style="justify-content:flex-end;margin:4px 0 8px;gap:6px"><span class="muted" style="font-size:12px">Trier :</span><button class="chip ${S.vue === 'urgence' ? 'on' : ''}" data-act="vue" data-v="urgence">Urgence</button><button class="chip ${S.vue === 'zone' ? 'on' : ''}" data-act="vue" data-v="zone">Zone</button></div>`;
+  let L = E.filter(t => (S.fEt === 'TOUT' || t.etat === S.fEt) && (!S.fZone || t.zone === S.fZone));
+  if (!L.length) return h + '<div class="list"><div class="empty">Aucune tâche ici 👌</div></div>';
+  if (S.vue === 'zone') {
+    const g = {}; L.forEach(t => (g[t.zone] = g[t.zone] || []).push(t));
+    Object.keys(g).forEach(z => h += `<div class="month"><span>${esc(z)}</span><span>${g[z].length}</span></div><div class="list">${g[z].sort(ordreUrg).map(t => ligneTache(t)).join('')}</div>`);
+  } else h += `<div class="list">${L.sort(ordreUrg).map(t => ligneTache(t)).join('')}</div>`;
+  return h;
+}
+
+/* ---------- HISTORIQUE ---------- */
+function vHisto() {
+  const H = histo().slice().sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : (b.row || 1e9) - (a.row || 1e9));
+  const m0 = today().slice(0, 7);
+  const ceMois = H.filter(h => h.date.slice(0, 7) === m0), min = ceMois.reduce((s, h) => s + (Number(h.duree) || 0), 0);
+  let h = `<div class="inkcards" style="margin-top:0"><div class="ink"><div class="lab">Ce mois-ci</div><div class="val">${ceMois.length}</div><div class="sub">passages · ${min ? min + ' min' : 'durée non notée'}</div></div>
+    <div class="ink"><div class="lab">Sur 12 mois</div><div class="val">${H.filter(x => x.date > addDays(today(), -365)).length}</div><div class="sub">lignes dans l'historique</div></div></div>`;
+  const zones = [...new Set(S.d.entretien.map(t => t.zone))];
+  h += `<div class="chips" style="margin-top:12px"><button class="chip ${!S.hZone ? 'on' : ''}" data-act="hzone" data-z="">Toutes</button>${zones.map(z => `<button class="chip ${S.hZone === z ? 'on' : ''}" data-act="hzone" data-z="${esc(z)}">${esc(z)}</button>`).join('')}</div>`;
+  const L = H.filter(x => !S.hZone || zoneDe(x.element) === S.hZone);
+  if (!L.length) return h + '<div class="list"><div class="empty">Aucun passage noté</div></div>';
+  let mois = '';
+  L.forEach((x, i) => {
+    const m = x.date.slice(0, 7);
+    if (m !== mois) {
+      if (mois) h += '</div>';
+      const d = dOf(x.date), nb = L.filter(z => z.date.slice(0, 7) === m).length;
+      h += `<div class="month"><span>${MOIS[d.getMonth()]} ${d.getFullYear()}</span><span>${nb} passage${nb > 1 ? 's' : ''}</span></div><div class="list">`; mois = m;
+    }
+    h += `<div class="item tap ${x.pending ? 'pending' : ''}" data-act="passage" data-id="${x.id}"><div class="mono" style="font-size:13px;font-weight:600;width:44px">${frCourt(x.date)}</div>
+      <div class="grow"><div class="ttl">${esc(x.element)}</div><div class="meta">${zoneTag(zoneDe(x.element) || x.zone)}${x.duree ? `<span class="mono">${x.duree} min</span>` : ''}${x.pending ? '<span>envoi…</span>' : ''}</div></div></div>`;
+  });
+  return h + '</div>';
+}
+const zoneDe = el => (S.d.entretien.find(t => t.element === el) || {}).zone || '';
+
+/* ---------- INVENTAIRE ---------- */
+function vInventaire() {
+  const I = S.d.inventaire, val = valeurMobilier(), pf = S.d.plafond || 28000, pct = Math.round(100 * val / pf);
+  const sansPhoto = I.filter(b => !b.photo).length, sansPrix = I.filter(b => !b.prix).length, star = I.filter(b => b.garantie > 2).length;
+  let h = `<div class="ink" style="margin-bottom:12px"><div class="lab">Valeur du mobilier</div><div class="val">${e0(val)} <span style="font-size:14px;font-weight:400;color:var(--light)">/ ${e0(pf)}</span></div>
+    <div class="gauge"><i style="width:${Math.min(pct, 100)}%;background:${pct >= 90 ? 'var(--ora)' : 'var(--yel)'}"></i></div><div class="sub">${I.length} biens · ${pct} % du plafond MAIF · hors travaux</div></div>`;
+  h += `<div class="search">${ICON.search}<input id="iq" type="search" placeholder="Chercher un objet, une marque, un magasin…" value="${esc(S.iq)}"></div>`;
+  const pieces = [...new Set(I.map(b => b.piece))].sort((a, b) => (S.d.listes.pieces.indexOf(a) + 99) % 99 - (S.d.listes.pieces.indexOf(b) + 99) % 99);
+  h += `<div class="chips"><button class="chip ${!S.iPiece ? 'on' : ''}" data-act="ipiece" data-p="">Toutes</button>${pieces.map(p => `<button class="chip ${S.iPiece === p ? 'on' : ''}" data-act="ipiece" data-p="${esc(p)}">${esc(p)}<small>${I.filter(b => b.piece === p).length}</small></button>`).join('')}</div>`;
+  const F = [['photo', '📷 Sans photo', sansPhoto], ['prix', '€ Sans prix', sansPrix], ['star', '★ Garantie +2 ans', star], ['garantie', 'Garantie à surveiller', I.filter(b => b.statut === 'EXPIRE BIENTÔT' || b.statut === 'EXPIRÉE').length]];
+  h += `<div class="chips">${F.map(([k, l, n]) => `<button class="chip ${S.iFiltre === k ? 'on' : ''}" data-act="ifiltre" data-f="${k}">${l}<small>${n}</small></button>`).join('')}</div>`;
+  h += `<div class="rowline" style="justify-content:space-between;margin:6px 0 8px"><span class="muted" id="icount" style="font-size:12.5px"></span><button class="mini" data-act="bien-new">${ICON.plus}Ajouter un bien</button></div>`;
+  h += `<div class="list" id="ilist">${listeBiens()}</div>`;
+  return h;
+}
+function biensFiltres() {
+  const q = norm(S.iq);
+  return S.d.inventaire.filter(b => (!S.iPiece || b.piece === S.iPiece)
+    && (!q || norm([b.objet, b.marque, b.magasin, b.categorie, b.piece, b.remarque, b.serie].join(' ')).includes(q))
+    && (!S.iFiltre || (S.iFiltre === 'photo' ? !b.photo : S.iFiltre === 'prix' ? !b.prix : S.iFiltre === 'star' ? b.garantie > 2 : (b.statut === 'EXPIRE BIENTÔT' || b.statut === 'EXPIRÉE'))));
+}
+function listeBiens() {
+  const L = biensFiltres();
+  setTimeout(() => { const c = $('#icount'); if (c) c.textContent = L.length + ' bien' + (L.length > 1 ? 's' : '') + ' · ' + e0(L.filter(b => b.categorie !== 'Travaux').reduce((s, b) => s + (Number(b.prix) || 0), 0)); });
+  if (!L.length) return '<div class="empty">Aucun bien ne correspond</div>';
+  return L.map(b => `<div class="item tap ${b.pending ? 'pending' : ''}" data-act="bien" data-id="${b.id}">
+    <div class="grow"><div class="ttl">${esc(b.objet)}</div>${b.marque ? `<div class="desc">${esc(b.marque)}</div>` : ''}
+    <div class="meta">${pieceTag(b.piece)}${b.garantie > 2 ? `<span class="badge star">★ ${b.garantie} ans</span>` : ''}${b.statut && b.statut !== 'COUVERTE' ? gStamp(b.statut) : ''}
+    ${b.facture ? '<span class="badge">📄 facture</span>' : ''}${b.photo ? `<span class="badge">${esc(b.photoLabel || '📷 photo')}</span>` : '<span class="badge warn">sans photo</span>'}</div></div>
+    <div class="when"><b>${b.prix ? e2(b.prix) : '<span class="badge warn">prix ?</span>'}</b>${b.date ? frCourt(b.date) + '/' + b.date.slice(2, 4) : ''}</div></div>`).join('');
+}
+
+/* ================= FEUILLES ================= */
+function ouvrir(html) { $('#sheetIn').innerHTML = html; $('#sheet').scrollTop = 0; $('#veil').classList.add('on'); $('#sheet').classList.add('on'); }
+function fermer() { $('#veil').classList.remove('on'); $('#sheet').classList.remove('on'); S.form = null; }
+const tete = (t, sub) => `<div class="shead"><span class="grab"></span><h3>${t}${sub ? `<div class="muted" style="font-family:var(--b);font-size:13px;text-transform:none;letter-spacing:0;font-weight:400;margin-top:3px">${sub}</div>` : ''}</h3><button class="ibtn" data-act="close" aria-label="Fermer">${ICON.close}</button></div>`;
+
+/* ---------- fiche tâche ---------- */
+function ouvrirTache(el) {
+  const t = S.d.entretien.find(x => x.element === el); if (!t) return;
+  const H = histo().filter(h => h.element === el).sort((a, b) => a.date < b.date ? 1 : -1).slice(0, 6);
+  ouvrir(tete(esc(t.element), zoneTag(t.zone)) + `
+    <div class="rowline" style="justify-content:space-between;margin-bottom:12px">${stamp(t.etat)}<span class="mono" style="font-weight:600">${ech(t.jours)}</span></div>
+    <div class="kv"><div>Intervention</div><div>${esc(t.intervention)}</div><div>Fréquence</div><div>${esc(t.freqTxt || freqTxt(t.freq))}</div>
+    <div>Dernier passage</div><div class="mono">${fr(t.dernier)}</div><div>Prochain</div><div class="mono"><b>${fr(t.prochain)}</b></div>
+    <div>Outillage</div><div>${esc(t.outils || '—')}</div></div>
+    <button class="go" data-act="fait" data-el="${esc(t.element)}">✓ C'est fait</button>
+    <div class="lbl">Derniers passages</div>
+    <div class="list">${H.length ? H.map(h => `<div class="item tap" data-act="passage" data-id="${h.id}"><span class="mono" style="font-weight:600">${fr(h.date)}</span><span class="grow"></span><span class="mono muted">${h.duree ? h.duree + ' min' : ''}</span></div>`).join('') : '<div class="empty">Jamais fait</div>'}</div>`);
+}
+
+/* ---------- saisie d'un passage ---------- */
+function ouvrirFait(el, passage) {
+  const t = S.d.entretien.find(x => x.element === el); if (!t) return;
+  S.form = passage ? { mode: 'maj', id: passage.id, el, date: passage.date, duree: passage.duree || '' } : { mode: 'fait', el, date: today(), duree: '' };
+  rendreFait();
+}
+function rendreFait() {
+  const f = S.form, t = S.d.entretien.find(x => x.element === f.el);
+  const jours = [[today(), "Aujourd'hui"], [addDays(today(), -1), 'Hier'], [addDays(today(), -2), 'Avant-hier']];
+  const autre = !jours.some(j => j[0] === f.date);
+  const durees = [5, 10, 15, 20, 30, 45, 60, 90];
+  ouvrir(tete(f.mode === 'maj' ? 'Modifier le passage' : 'Noter le passage', `<b>${esc(t.element)}</b> · ${esc(t.intervention)}`) + `
+    <div class="lbl">Quand ?</div>
+    <div class="chips wrap">${jours.map(([d, l]) => `<button class="chip ${f.date === d ? 'on' : ''}" data-act="f-date" data-d="${d}">${l}</button>`).join('')}
+      <label class="chip ${autre ? 'on' : ''}" style="position:relative">📅 ${autre ? fr(f.date) : 'Autre date'}<input type="date" id="fdate" max="${today()}" value="${f.date}" style="position:absolute;inset:0;opacity:0"></label></div>
+    <div class="lbl">Durée <span style="text-transform:none;letter-spacing:0">(facultatif)</span></div>
+    <div class="chips wrap"><button class="chip ${!f.duree ? 'on' : ''}" data-act="f-duree" data-v="">—</button>${durees.map(d => `<button class="chip ${+f.duree === d ? 'on' : ''}" data-act="f-duree" data-v="${d}">${d} min</button>`).join('')}</div>
+    ${f.mode === 'fait' && t.freq ? `<div class="note">Prochain passage calculé : <b class="mono">${fr(edate(f.date, t.freq))}</b> (${esc(t.freqTxt || freqTxt(t.freq))})</div>` : ''}
+    <button class="go" data-act="f-ok">${f.mode === 'maj' ? 'Enregistrer' : '✓ Enregistrer le passage'}</button>
+    ${f.mode === 'maj' ? `<button class="go danger ${f.arm ? 'armed' : ''}" data-act="f-del">${f.arm ? 'Confirmer la suppression' : 'Supprimer ce passage'}</button>` : ''}`);
+  const di = $('#fdate'); if (di) di.addEventListener('change', () => { if (di.value) { f.date = di.value > today() ? today() : di.value; rendreFait(); } });
+}
+function validerFait() {
+  const f = S.form, t = S.d.entretien.find(x => x.element === f.el);
+  fermer();
+  if (f.mode === 'maj') {
+    const h = S.d.historique.find(x => x.id === f.id); if (!h) return;
+    h.date = f.date; h.duree = f.duree ? +f.duree : ''; h.pending = true; recalc(t); rendre(true);
+    toast('Passage modifié'); enfiler({ op: 'maj', id: h.id }); return;
+  }
+  const h = { id: uid(), date: f.date, element: f.el, zone: t.zone, duree: f.duree ? +f.duree : '', pending: true };
+  S.d.historique.push(h); recalc(t); t.pending = true; rendre(true); sauver();
+  setTimeout(() => { t.pending = false; }, 0);
+  toast('✓ ' + f.el + ' · prochain le ' + fr(t.prochain), 'ANNULER', () => supprimerPassage(h));
+  enfiler({ op: 'fait', id: h.id });
+}
+function supprimerPassage(h) {
+  h.deleted = true; const t = S.d.entretien.find(x => x.element === h.element); if (t) recalc(t);
+  // pas encore envoyé : l'envoi sera simplement sauté ; en cours d'envoi : annulé dès la réponse
+  if (h.row) enfiler({ op: 'annuler', row: h.row, attendu: h.srv || { date: h.date, element: h.element } });
+  S.d.historique = S.d.historique.filter(x => x !== h); sauver(); rendre(true); toast('Passage supprimé');
+}
+
+/* ---------- bouton + : choisir l'élément ---------- */
+function ouvrirChoix() {
+  S.form = { mode: 'choix', q: '' };
+  ouvrir(tete('Noter un passage', 'Quel élément vient d\'être fait ?') + `<div class="search">${ICON.search}<input id="cq" type="search" placeholder="Chercher (four, filtre, VMC…)"></div><div class="pick" id="cpick">${listeChoix('')}</div>`);
+  const q = $('#cq'); q.addEventListener('input', () => { $('#cpick').innerHTML = listeChoix(q.value); });
+}
+function listeChoix(q) {
+  q = norm(q);
+  const L = S.d.entretien.filter(t => !q || norm(t.element + ' ' + t.intervention + ' ' + t.zone).includes(q));
+  const urg = L.filter(t => t.etat === 'EN RETARD' || t.etat === 'BIENTÔT').sort(ordreUrg);
+  let h = urg.length ? `<div class="grp">À faire en premier</div>` + urg.map(t => btnChoix(t)).join('') : '';
+  const g = {}; L.forEach(t => (g[t.zone] = g[t.zone] || []).push(t));
+  Object.keys(g).forEach(z => h += `<div class="grp">${esc(z)}</div>` + g[z].map(t => btnChoix(t)).join(''));
+  return h || '<div class="empty">Aucun élément</div>';
+}
+const btnChoix = t => `<button data-act="choix" data-el="${esc(t.element)}"><span class="grow"><b>${esc(t.element)}</b><div class="desc">${esc(t.intervention)}</div></span>${stamp(t.etat)}</button>`;
+
+/* ---------- fiche bien ---------- */
+function ouvrirBien(id) {
+  const b = S.d.inventaire.find(x => x.id === id); if (!b) return;
+  S.form = { mode: 'bien', id };
+  ouvrir(tete(esc(b.objet), esc(b.marque || '')) + `
+    <div class="rowline" style="gap:6px;flex-wrap:wrap;margin-bottom:12px">${pieceTag(b.piece)}<span class="badge">${esc(b.categorie || '—')}</span>${b.garantie > 2 ? `<span class="badge star">★ ${b.garantie} ans</span>` : ''}${gStamp(b.statut)}</div>
+    <div class="kv">
+      <div>Prix TTC</div><div class="mono"><b>${b.prix ? e2(b.prix) : '—'}</b></div>
+      <div>Acheté le</div><div class="mono">${fr(b.date)}</div>
+      <div>Magasin</div><div>${esc(b.magasin || '—')}</div>
+      <div>N° de série</div><div class="mono">${esc(b.serie || '—')}</div>
+      <div>Garantie</div><div>${b.garantie ? b.garantie + ' an' + (b.garantie > 1 ? 's' : '') + (b.finGarantie ? ' · jusqu\'au <span class="mono">' + fr(b.finGarantie) + '</span>' : '') : '—'}</div>
+    </div>
+    ${b.remarque ? `<div class="note">${esc(b.remarque)}</div>` : ''}
+    <div class="btnrow">
+      ${b.facture ? `<a class="go sec2" href="${esc(b.facture)}" target="_blank" rel="noopener">${esc(b.factureLabel || '📄 Facture')}</a>` : `<span class="go sec2" style="opacity:.45">Pas de facture</span>`}
+      ${b.photo ? `<a class="go sec2" href="${esc(b.photo)}" target="_blank" rel="noopener">${esc(b.photoLabel || '📁 Photos')}</a>` : `<span class="go sec2" style="opacity:.45">Aucune photo</span>`}
+    </div>
+    <div id="photoBox"></div>
+    <button class="go" data-act="photo" ${b.row ? '' : 'disabled'}>📷 ${b.photo ? 'Ajouter une photo' : 'Prendre la photo'}</button>
+    <button class="go sec2" data-act="bien-edit">✎ Modifier la fiche</button>`);
+}
+function ouvrirBienEdit(id) {
+  const b = id ? S.d.inventaire.find(x => x.id === id) : null;
+  S.form = { mode: 'bien-edit', id: id || null, v: b ? Object.assign({}, b) : { piece: S.iPiece || 'À préciser', categorie: 'Mobilier', objet: '', marque: '', serie: '', magasin: '', date: '', prix: '', garantie: 2, remarque: '' } };
+  rendreBienEdit();
+}
+function rendreBienEdit() {
+  const f = S.form, v = f.v, L = S.d.listes;
+  ouvrir(tete(f.id ? 'Modifier le bien' : 'Ajouter un bien') + `
+    <div class="lbl">Objet *</div><input class="field" id="b-objet" value="${esc(v.objet)}" placeholder="Ex. Canapé d'angle">
+    <div class="lbl">Pièce</div><div class="chips wrap">${L.pieces.map(p => `<button class="chip ${v.piece === p ? 'on' : ''}" data-act="b-piece" data-p="${esc(p)}">${esc(p)}</button>`).join('')}</div>
+    <div class="lbl">Catégorie</div><select class="field" id="b-categorie">${L.categories.map(c => `<option ${v.categorie === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
+    <div class="lbl">Marque / modèle</div><input class="field" id="b-marque" value="${esc(v.marque)}">
+    <div class="grid2"><div><div class="lbl">Prix TTC (€)</div><input class="field mono" id="b-prix" inputmode="decimal" value="${v.prix === '' ? '' : String(v.prix).replace('.', ',')}"></div>
+      <div><div class="lbl">Date d'achat</div><input class="field mono" id="b-date" type="date" value="${esc(v.date)}"></div></div>
+    <div class="grid2"><div><div class="lbl">Magasin</div><input class="field" id="b-magasin" value="${esc(v.magasin)}"></div>
+      <div><div class="lbl">N° de série</div><input class="field mono" id="b-serie" value="${esc(v.serie)}"></div></div>
+    <div class="lbl">Garantie</div><div class="stepper"><button data-act="b-gar" data-d="-1">−</button><span id="b-gar">${v.garantie || 0} an${v.garantie > 1 ? 's' : ''}</span><button data-act="b-gar" data-d="1">+</button></div>
+    <div class="lbl">Remarque</div><textarea class="field" id="b-remarque">${esc(v.remarque)}</textarea>
+    <div class="err" id="b-err"></div>
+    <button class="go" data-act="b-save">Enregistrer</button>
+    ${f.id ? `<button class="go danger ${f.arm ? 'armed' : ''}" data-act="b-del">${f.arm ? 'Confirmer : retirer de l\'inventaire' : 'Retirer de l\'inventaire'}</button>` : ''}`);
+}
+function lireBienForm() {
+  const v = S.form.v;['objet', 'marque', 'magasin', 'serie', 'remarque', 'date', 'categorie'].forEach(k => { const e = $('#b-' + k); if (e) v[k] = e.value.trim(); });
+  const p = $('#b-prix'); if (p) { const n = Number(p.value.replace(/\s/g, '').replace(',', '.')); v.prix = p.value.trim() === '' || isNaN(n) ? '' : n; }
+}
+function enregistrerBien() {
+  lireBienForm(); const f = S.form, v = f.v;
+  if (!v.objet) { $('#b-err').textContent = "Donne au moins un nom à l'objet"; return; }
+  const champs = { piece: v.piece, categorie: v.categorie, objet: v.objet, marque: v.marque, serie: v.serie, magasin: v.magasin, date: v.date, prix: v.prix, garantie: v.garantie, remarque: v.remarque };
+  let b;
+  if (f.id) {
+    b = S.d.inventaire.find(x => x.id === f.id); const att = { objet: b.srvObjet || b.objet };
+    Object.assign(b, champs, { pending: true }); b.srvObjet = v.objet;
+    if (b.date && b.garantie) { b.finGarantie = edate(b.date, 12 * b.garantie); }
+    enfiler({ op: 'call', action: 'inv-save', payload: { row: b.row, attendu: att, bien: champs }, after: 'bien', id: b.id });
+  } else {
+    b = Object.assign({ id: uid(), pending: true, photo: '', facture: '', statut: '' }, champs); b.srvObjet = v.objet;
+    S.d.inventaire.push(b);
+    enfiler({ op: 'call', action: 'inv-save', payload: { bien: champs }, after: 'bien', id: b.id });
+  }
+  fermer(); rendre(true); toast(f.id ? 'Fiche mise à jour' : 'Bien ajouté à l\'inventaire');
+}
+function supprimerBien() {
+  const f = S.form; if (!f.arm) { lireBienForm(); f.arm = true; rendreBienEdit(); return; }
+  const b = S.d.inventaire.find(x => x.id === f.id); fermer(); if (!b) return;
+  S.d.inventaire = S.d.inventaire.filter(x => x !== b);
+  if (b.row) enfiler({ op: 'call', action: 'inv-del', payload: { row: b.row, attendu: { objet: b.srvObjet || b.objet } } });
+  rendre(true); toast('Retiré de l\'inventaire');
+}
+
+/* ---------- photo ---------- */
+function compresser(file) {
+  return new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const M = 1600, r = Math.min(1, M / Math.max(img.width, img.height));
+      const c = document.createElement('canvas'); c.width = Math.round(img.width * r); c.height = Math.round(img.height * r);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      res(c.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = rej; img.src = url;
+  });
+}
+async function envoyerPhoto(file) {
+  const b = S.d.inventaire.find(x => x.id === (S.form || {}).id); if (!b || !b.row) return;
+  const box = $('#photoBox'); if (box) box.innerHTML = '<div class="photo-busy"><span class="spin"></span>Envoi de la photo vers le Drive…</div>';
+  try {
+    const data = await compresser(file);
+    const r = await api('photo', { row: b.row, attendu: { objet: b.srvObjet || b.objet }, image: data });
+    if (!r.ok) throw new Error(r.message);
+    b.photo = r.photo; b.photoLabel = r.photoLabel; sauver();
+    toast('📷 Photo rangée dans le Drive (' + r.nb + ')');
+    if (S.form && S.form.id === b.id) ouvrirBien(b.id); rendre(true);
+  } catch (e) {
+    if (box) box.innerHTML = `<div class="photo-busy" style="color:var(--red)">Photo non envoyée : ${esc(e.message || 'connexion impossible')}</div>`;
+  }
+}
+
+/* ---------- contacts ---------- */
+function ouvrirContact(id) {
+  const c = id ? S.d.contacts.find(x => x.id === id) : null;
+  S.form = { mode: 'contact', id: id || null, v: c ? Object.assign({}, c) : { pourquoi: '', nom: '', mail: '', tel: '', notes: '' } };
+  const v = S.form.v;
+  ouvrir(tete(id ? 'Modifier le contact' : 'Nouveau contact') + `
+    <div class="lbl">Pour quoi</div><input class="field" id="c-pourquoi" value="${esc(v.pourquoi)}" placeholder="Ex. Plombier, SAV four…">
+    <div class="lbl">Entreprise / nom</div><input class="field" id="c-nom" value="${esc(v.nom)}">
+    <div class="grid2"><div><div class="lbl">Téléphone</div><input class="field mono" id="c-tel" type="tel" value="${esc(v.tel)}"></div>
+    <div><div class="lbl">E-mail</div><input class="field" id="c-mail" type="email" value="${esc(v.mail)}"></div></div>
+    <div class="lbl">Notes</div><textarea class="field" id="c-notes">${esc(v.notes)}</textarea>
+    <div class="err" id="c-err"></div>
+    <button class="go" data-act="c-save">Enregistrer</button>
+    ${id ? `<button class="go danger" data-act="c-del">Supprimer le contact</button>` : ''}`);
+}
+function enregistrerContact() {
+  const f = S.form, v = {};['pourquoi', 'nom', 'mail', 'tel', 'notes'].forEach(k => v[k] = $('#c-' + k).value.trim());
+  if (!v.pourquoi && !v.nom) { $('#c-err').textContent = 'Indique au moins « pour quoi » ou un nom'; return; }
+  if (f.id) {
+    const c = S.d.contacts.find(x => x.id === f.id), att = { pourquoi: c.srv ? c.srv.pourquoi : c.pourquoi, nom: c.srv ? c.srv.nom : c.nom };
+    Object.assign(c, v, { pending: true, srv: { pourquoi: v.pourquoi, nom: v.nom } });
+    enfiler({ op: 'call', action: 'contact-save', payload: { row: c.row, attendu: att, contact: v }, after: 'contact', id: c.id });
+  } else {
+    const c = Object.assign({ id: uid(), pending: true, srv: { pourquoi: v.pourquoi, nom: v.nom } }, v); S.d.contacts.push(c);
+    enfiler({ op: 'call', action: 'contact-save', payload: { contact: v }, after: 'contact', id: c.id });
+  }
+  fermer(); rendre(true); toast('Contact enregistré');
+}
+function supprimerContact() {
+  const c = S.d.contacts.find(x => x.id === S.form.id); fermer(); if (!c) return;
+  S.d.contacts = S.d.contacts.filter(x => x !== c);
+  if (c.row) enfiler({ op: 'call', action: 'contact-del', payload: { row: c.row, attendu: c.srv || { pourquoi: c.pourquoi, nom: c.nom } } });
+  rendre(true); toast('Contact supprimé');
+}
+
+/* ---------- réglages ---------- */
+function ouvrirReglages() {
+  const sv = (S.d && S.d.serveur) || {};
+  S.form = { mode: 'reglages' };
+  ouvrir(tete('Réglages') + `
+    <div class="kv">
+      <div>Mail d'échéance</div><div>${sv.mailActif ? '✅ actif · chaque matin, seulement s\'il y a quelque chose à faire' : '⚠️ inactif : lance « installer » dans Apps Script'}</div>
+      <div>Envoyé à</div><div>${esc(sv.destinataire || '—')}</div>
+      <div>Dernier mail</div><div class="mono">${sv.dernierMail ? new Date(sv.dernierMail).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) : 'aucun pour l\'instant'}</div>
+      <div>Écritures</div><div>${S.queue.length ? S.queue.length + ' en attente d\'envoi' : 'tout est enregistré'}</div>
+      <div>Version</div><div class="mono">app ${VERSION} · api ${esc(sv.version || '?')}</div>
+    </div>
+    <button class="go" data-act="mailtest">Envoyer un mail de test</button>
+    <div class="btnrow"><button class="go sec2" data-act="refresh">↻ Actualiser</button><a class="go sec2" href="${SHEET_URL}" target="_blank" rel="noopener">Ouvrir le Sheet</a></div>
+    <button class="go danger" data-act="logout">Changer de clé d'accès</button>`);
+}
+
+/* ================= VERROU ================= */
+function verrouiller(msg) {
+  const l = $('#lock'); l.hidden = false;
+  const besoinUrl = !API_URL || API_URL.startsWith('COLLE');
+  l.innerHTML = `<div class="in"><img src="icon-192.png" alt=""><h1>Carnet · T3</h1>
+    <p class="muted" style="margin:0 0 18px;font-style:italic">Entretien & inventaire de l'appartement</p>
+    ${besoinUrl ? `<input class="field" id="kurl" placeholder="URL de l'API (…/exec)" value="${esc(S.url || '')}" autocomplete="off">` : ''}
+    <input class="field" id="kin" type="password" placeholder="Clé d'accès" autocomplete="current-password">
+    <div class="err" id="kerr">${msg ? esc(msg) : ''}</div>
+    <button class="go" id="kgo">Ouvrir le carnet</button></div>`;
+  const go = $('#kgo');
+  const valider = async () => {
+    const v = $('#kin').value.trim(), u = $('#kurl') ? $('#kurl').value.trim() : '';
+    if ($('#kurl') && !/^https:\/\/script\.google(usercontent)?\.com\//.test(u)) { $('#kerr').textContent = "Colle l'URL du déploiement Apps Script (elle finit par /exec)"; return; }
+    if (!v) { $('#kerr').textContent = 'Tape ta clé'; return; }
+    go.textContent = 'Vérification…'; S.key = v; if (u) S.url = u;
+    try {
+      const r = await api('data');
+      if (!r.ok) { go.textContent = 'Ouvrir le carnet'; $('#kerr').textContent = r.message || 'Clé incorrecte'; return; }
+      LS.set('key', v); if (u) LS.set('url', u); S.queue = []; S.d = null; charger(r.data);
+      l.hidden = true; S.lastFetch = Date.now(); setSync('ok'); rendre();
+    } catch (e) { go.textContent = 'Ouvrir le carnet'; $('#kerr').textContent = 'Connexion impossible. Vérifie l\'URL et ta connexion.'; }
+  };
+  go.addEventListener('click', valider);
+  $('#kin').addEventListener('keydown', e => { if (e.key === 'Enter') valider(); });
+}
+
+/* ================= TOAST ================= */
+let tt;
+function toast(txt, btn, fn) {
+  const t = $('#toast'); $('#toastT').textContent = txt; const b = $('#toastB');
+  b.hidden = !btn; b.textContent = btn || ''; b.onclick = () => { t.classList.remove('on'); fn && fn(); };
+  t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), btn ? 6000 : 2400);
+}
+
+/* ================= ÉVÉNEMENTS ================= */
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-act]'); if (!el) return;
+  const a = el.dataset.act;
+  if (a.startsWith('tab:')) { fermer(); S.tab = a.slice(4); rendre(); scrollTo(0, 0); return; }
+  switch (a) {
+    case 'close': fermer(); break;
+    case 'gear': ouvrirReglages(); break;
+    case 'plus': ouvrirChoix(); break;
+    case 'choix': ouvrirFait(el.dataset.el); break;
+    case 'fait': ouvrirFait(el.dataset.el); break;
+    case 'tache': ouvrirTache(el.dataset.el); break;
+    case 'etat': S.tab = 'entretien'; S.fEt = el.dataset.e; S.fZone = null; rendre(); scrollTo(0, 0); break;
+    case 'zone': S.tab = 'entretien'; S.fEt = 'TOUT'; S.fZone = el.dataset.z; rendre(); scrollTo(0, 0); break;
+    case 'fet': S.fEt = el.dataset.e; rendre(true); break;
+    case 'fzone': S.fZone = el.dataset.z || null; rendre(true); break;
+    case 'vue': S.vue = el.dataset.v; rendre(true); break;
+    case 'hzone': S.hZone = el.dataset.z || null; rendre(true); break;
+    case 'f-date': S.form.date = el.dataset.d; rendreFait(); break;
+    case 'f-duree': S.form.duree = el.dataset.v; rendreFait(); break;
+    case 'f-ok': validerFait(); break;
+    case 'f-del': if (!S.form.arm) { S.form.arm = true; rendreFait(); } else { const h = S.d.historique.find(x => x.id === S.form.id); fermer(); if (h) supprimerPassage(h); } break;
+    case 'passage': { const h = S.d.historique.find(x => x.id === el.dataset.id); if (h) ouvrirFait(h.element, h); break; }
+    case 'ipiece': S.iPiece = el.dataset.p || null; rendre(true); break;
+    case 'ifiltre': S.iFiltre = S.iFiltre === el.dataset.f ? null : el.dataset.f; rendre(true); break;
+    case 'bien': ouvrirBien(el.dataset.id); break;
+    case 'bien-new': ouvrirBienEdit(null); break;
+    case 'bien-edit': ouvrirBienEdit(S.form.id); break;
+    case 'b-piece': lireBienForm(); S.form.v.piece = el.dataset.p; rendreBienEdit(); break;
+    case 'b-gar': { lireBienForm(); const v = S.form.v; v.garantie = Math.max(0, Math.min(10, (+v.garantie || 0) + +el.dataset.d)); $('#b-gar').textContent = v.garantie + ' an' + (v.garantie > 1 ? 's' : ''); break; }
+    case 'b-save': enregistrerBien(); break;
+    case 'b-del': supprimerBien(); break;
+    case 'photo': $('#fileIn').value = ''; $('#fileIn').click(); break;
+    case 'contact': ouvrirContact(el.dataset.id); break;
+    case 'contact-new': ouvrirContact(null); break;
+    case 'c-save': enregistrerContact(); break;
+    case 'c-del': supprimerContact(); break;
+    case 'refresh': fermer(); S.lastFetch = 0; rafraichir(true); toast('Actualisation…'); break;
+    case 'mailtest': api('mail-test').then(r => toast(r.ok ? '📧 Mail de test envoyé' : 'Échec : ' + r.message)).catch(() => toast('Connexion impossible')); break;
+    case 'logout': fermer(); LS.del('key'); S.key = ''; verrouiller(); break;
+  }
+});
+document.addEventListener('input', ev => {
+  if (ev.target.id === 'iq') { S.iq = ev.target.value; $('#ilist').innerHTML = listeBiens(); }
+});
+$('#fileIn').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if (f) envoyerPhoto(f); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { rafraichir(false); pomper(); } });
+
+/* ================= DÉMARRAGE ================= */
+function idsLocaux() { // identifiants stables pour l'interface
+  if (!S.d) return;
+  S.d.historique.forEach(h => { if (!h.id) h.id = 'h' + h.row; if (h.row && !h.srv) h.srv = { date: h.date, element: h.element }; });
+  S.d.inventaire.forEach(b => { if (!b.id) b.id = 'b' + b.row; if (!b.srvObjet) b.srvObjet = b.objet; });
+  S.d.contacts.forEach(c => { if (!c.id) c.id = 'c' + c.row; if (!c.srv) c.srv = { pourquoi: c.pourquoi, nom: c.nom }; });
+}
+const _charger = charger;
+charger = function (d) { _charger(d); idsLocaux(); sauver(); };
+idsLocaux();
+if (!S.key || !apiUrl()) verrouiller(); else { rendre(); rafraichir(true); pomper(); }
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>
