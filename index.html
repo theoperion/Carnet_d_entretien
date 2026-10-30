@@ -107,6 +107,8 @@ main{padding:14px 14px 0}
 .tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:3px;white-space:nowrap;line-height:1.35}
 .badge{display:inline-flex;align-items:center;gap:3px;font-size:11.5px;padding:1px 6px;border:1px solid var(--rule);border-radius:3px;background:var(--paper2);white-space:nowrap}
 .badge.warn{border-color:var(--ora);color:var(--ora);background:transparent}
+.badge.maif{border-color:var(--ink);background:var(--yel);color:var(--ink);font-weight:700}
+.go.maifon{background:var(--yel);color:var(--ink);border:2px solid var(--ink)}
 .badge.star{border-color:var(--grn);color:var(--grn);font-weight:700;background:#E3EFE5}
 
 /* ---------- boutons ---------- */
@@ -241,9 +243,9 @@ textarea.field{min-height:70px;resize:vertical}
 <script>
 /* ================= CONFIG ================= */
 // Colle ici l'URL de ton déploiement Apps Script (…/exec). Sinon l'app te la demandera à la première ouverture.
-const API_URL = 'https://script.google.com/macros/s/AKfycbxm71sB9a7sABtVHdTViItfGlA3zIYTN-hL6YdPFcInbllVzvKs9Cp9gp6nVfq_MmqGaQ/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxGc5MptlyEGHT6o5eFdR2idZ-SvkQ0UvP1PAj8AHHGWICZJLMOD5s2HK5E9UR2oJj2_g/exec';
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1iy3H37w2_-2DAS21jzTKz2N_3QewGSZgVtQ7Thl0BKA/edit';
-const VERSION = '1.1';
+const VERSION = '1.2';
 
 /* ================= OUTILS ================= */
 const $ = s => document.querySelector(s);
@@ -528,17 +530,19 @@ function vInventaire() {
   h += `<div class="search">${ICON.search}<input id="iq" type="search" placeholder="Chercher un objet, une marque, un magasin…" value="${esc(S.iq)}"></div>`;
   const pieces = [...new Set(I.map(b => b.piece))].sort((a, b) => (S.d.listes.pieces.indexOf(a) + 99) % 99 - (S.d.listes.pieces.indexOf(b) + 99) % 99);
   h += `<div class="chips"><button class="chip ${!S.iPiece ? 'on' : ''}" data-act="ipiece" data-p="">Toutes</button>${pieces.map(p => `<button class="chip ${S.iPiece === p ? 'on' : ''}" data-act="ipiece" data-p="${esc(p)}">${esc(p)}<small>${I.filter(b => b.piece === p).length}</small></button>`).join('')}</div>`;
-  const F = [['photo', '📷 Sans photo', sansPhoto], ['prix', '€ Sans prix', sansPrix], ['star', '★ Garantie +2 ans', star], ['garantie', 'Garantie à surveiller', I.filter(b => b.statut === 'EXPIRE BIENTÔT' || b.statut === 'EXPIRÉE').length]];
+  const F = [['maif', '🛡 Sélection MAIF', I.filter(b => b.maif).length], ['photo', '📷 Sans photo', sansPhoto], ['prix', '€ Sans prix', sansPrix], ['couverte', '✓ Sous garantie', I.filter(sousGarantie).length], ['star', '★ Garantie +2 ans', star], ['garantie', 'Garantie à surveiller', I.filter(b => b.statut === 'EXPIRE BIENTÔT' || b.statut === 'EXPIRÉE').length]];
   h += `<div class="chips">${F.map(([k, l, n]) => `<button class="chip ${S.iFiltre === k ? 'on' : ''}" data-act="ifiltre" data-f="${k}">${l}<small>${n}</small></button>`).join('')}</div>`;
   h += `<div class="rowline" style="justify-content:space-between;margin:6px 0 8px"><span class="muted" id="icount" style="font-size:12.5px"></span><button class="mini" data-act="bien-new">${ICON.plus}Ajouter un bien</button></div>`;
   h += `<div class="list" id="ilist">${listeBiens()}</div>`;
   return h;
 }
+// encore sous garantie aujourd'hui (2 ans légaux ou extension), y compris celles qui expirent bientôt
+const sousGarantie = b => !!b.finGarantie && b.finGarantie >= today();
 function biensFiltres() {
   const q = norm(S.iq);
   return S.d.inventaire.filter(b => (!S.iPiece || b.piece === S.iPiece)
     && (!q || norm([b.objet, b.marque, b.magasin, b.categorie, b.piece, b.remarque, b.serie].join(' ')).includes(q))
-    && (!S.iFiltre || (S.iFiltre === 'photo' ? !b.photo : S.iFiltre === 'prix' ? !b.prix : S.iFiltre === 'star' ? b.garantie > 2 : (b.statut === 'EXPIRE BIENTÔT' || b.statut === 'EXPIRÉE'))));
+    && (!S.iFiltre || (S.iFiltre === 'maif' ? b.maif : S.iFiltre === 'photo' ? !b.photo : S.iFiltre === 'prix' ? !b.prix : S.iFiltre === 'couverte' ? sousGarantie(b) : S.iFiltre === 'star' ? b.garantie > 2 : (b.statut === 'EXPIRE BIENTÔT' || b.statut === 'EXPIRÉE'))));
 }
 function listeBiens() {
   const L = biensFiltres();
@@ -546,7 +550,7 @@ function listeBiens() {
   if (!L.length) return '<div class="empty">Aucun bien ne correspond</div>';
   return L.map(b => `<div class="item tap ${b.pending ? 'pending' : ''}" data-act="bien" data-id="${b.id}">
     <div class="grow"><div class="ttl">${esc(b.objet)}</div>${b.marque ? `<div class="desc">${esc(b.marque)}</div>` : ''}
-    <div class="meta">${pieceTag(b.piece)}${b.garantie > 2 ? `<span class="badge star">★ ${b.garantie} ans</span>` : ''}${b.statut && b.statut !== 'COUVERTE' ? gStamp(b.statut) : ''}
+    <div class="meta">${pieceTag(b.piece)}${b.maif ? '<span class="badge maif">MAIF</span>' : ''}${b.garantie > 2 ? `<span class="badge star">★ ${b.garantie} ans</span>` : ''}${b.statut && b.statut !== 'COUVERTE' ? gStamp(b.statut) : ''}
     ${b.facture ? '<span class="badge">📄 facture</span>' : ''}${b.photo ? `<span class="badge">${esc(b.photoLabel || '📷 photo')}</span>` : '<span class="badge warn">sans photo</span>'}</div></div>
     <div class="when"><b>${b.prix ? e2(b.prix) : '<span class="badge warn">prix ?</span>'}</b>${b.date ? frCourt(b.date) + '/' + b.date.slice(2, 4) : ''}</div></div>`).join('');
 }
@@ -648,6 +652,7 @@ function ouvrirBien(id) {
       ${b.facture ? `<a class="go sec2" href="${esc(b.facture)}" target="_blank" rel="noopener">${esc(b.factureLabel || '📄 Facture')}</a>` : `<span class="go sec2" style="opacity:.45">Pas de facture</span>`}
       ${b.photo ? `<a class="go sec2" href="${esc(b.photo)}" target="_blank" rel="noopener">${esc(b.photoLabel || '📁 Photos')}</a>` : `<span class="go sec2" style="opacity:.45">Aucune photo</span>`}
     </div>
+    <button class="go ${b.maif ? 'maifon' : 'sec2'}" data-act="maif" ${b.row ? '' : 'disabled'}>${b.maif ? '✓ Dans le dossier MAIF (retirer)' : '🛡 Ajouter au dossier MAIF'}</button>
     <div id="photoBox"></div>
     <button class="go" data-act="photo" ${b.row ? '' : 'disabled'}>📷 ${b.photo ? 'Ajouter une photo' : 'Prendre la photo'}</button>
     <button class="go sec2" data-act="bien-edit">✎ Modifier la fiche</button>`);
@@ -766,21 +771,34 @@ function supprimerContact() {
   rendre(true); toast('Contact supprimé');
 }
 
+/* ---------- sélection MAIF (colonne O du Sheet) ---------- */
+function basculerMaif() {
+  const b = S.d.inventaire.find(x => x.id === S.form.id); if (!b || !b.row) return;
+  b.maif = !b.maif;
+  enfiler({ op: 'call', action: 'inv-maif', payload: { row: b.row, attendu: { objet: b.srvObjet || b.objet }, maif: b.maif } });
+  ouvrirBien(b.id); rendre(true);
+  toast(b.maif ? '🛡 Ajouté au dossier MAIF' : 'Retiré du dossier MAIF');
+}
+
 /* ---------- export du dossier (PDF / Word) ---------- */
 function ouvrirExport() {
-  S.form = { mode: 'export', pieces: new Set(S.iPiece ? [S.iPiece] : []), annexes: true, st: S.expSt || null, dernier: S.expDernier || null, charge: !S.expSt };
+  S.form = { mode: 'export', pieces: new Set(S.iPiece ? [S.iPiece] : []), annexes: true, maif: S.d.inventaire.some(b => b.maif), st: S.expSt || null, dernier: S.expDernier || null, charge: !S.expSt };
   ouvrir(''); rendreExport(); suivreExport();
 }
 function rendreExport() {
   const f = S.form; if (!f || f.mode !== 'export') return;
   const I = S.d.inventaire, L = S.d.listes.pieces.filter(p => I.some(b => b.piece === p));
   I.forEach(b => { if (L.indexOf(b.piece) < 0) L.push(b.piece); });
-  const sel = I.filter(b => !f.pieces.size || f.pieces.has(b.piece));
+  const nMaif = I.filter(b => b.maif).length;
+  if (!nMaif) f.maif = false;
+  const sel = I.filter(b => (!f.pieces.size || f.pieces.has(b.piece)) && (!f.maif || b.maif));
   const st = f.st, enCours = st && (st.etat === 'attente' || st.etat === 'en cours');
   const ago = iso => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? "à l'instant" : m < 60 ? 'il y a ' + m + ' min' : new Date(iso).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }); };
   let h = tete('Dossier pour l\'assurance', 'Couverture, récap par pièce, une fiche par bien avec ses photos, puis les factures en annexe');
   if (!enCours) {
-    h += `<div class="lbl">Pièces</div><div class="chips wrap"><button class="chip ${!f.pieces.size ? 'on' : ''}" data-act="x-piece" data-p="">Toutes</button>${L.map(p => `<button class="chip ${f.pieces.has(p) ? 'on' : ''}" data-act="x-piece" data-p="${esc(p)}">${esc(p)}<small>${I.filter(b => b.piece === p).length}</small></button>`).join('')}</div>
+    h += `<div class="lbl">Biens</div><div class="chips wrap"><button class="chip ${f.maif ? 'on' : ''}" data-act="x-sel" data-v="1" ${nMaif ? '' : 'disabled style="opacity:.45"'}>🛡 Sélection MAIF<small>${nMaif}</small></button><button class="chip ${!f.maif ? 'on' : ''}" data-act="x-sel" data-v="0">Tout l'inventaire<small>${I.length}</small></button></div>
+    ${nMaif ? '' : '<p class="muted" style="font-size:12.5px;font-style:italic;margin:2px 2px 0">Aucun bien coché : ouvre une fiche et « Ajouter au dossier MAIF ».</p>'}
+    <div class="lbl">Pièces</div><div class="chips wrap"><button class="chip ${!f.pieces.size ? 'on' : ''}" data-act="x-piece" data-p="">Toutes</button>${L.map(p => `<button class="chip ${f.pieces.has(p) ? 'on' : ''}" data-act="x-piece" data-p="${esc(p)}">${esc(p)}<small>${I.filter(b => b.piece === p).length}</small></button>`).join('')}</div>
     <div class="lbl">Factures</div><div class="chips wrap"><button class="chip ${f.annexes ? 'on' : ''}" data-act="x-ann" data-v="1">Jointes en annexe</button><button class="chip ${!f.annexes ? 'on' : ''}" data-act="x-ann" data-v="0">Fiches seules</button></div>
     <div class="kv" style="margin-top:10px"><div>Biens</div><div><b>${sel.length}</b> · ${e0(sel.filter(b => b.categorie !== 'Travaux').reduce((s, b) => s + (Number(b.prix) || 0), 0))}</div>
     <div>Avec facture</div><div>${sel.filter(b => b.facture).length} / ${sel.length}</div><div>Avec photo</div><div>${sel.filter(b => b.photo).length} / ${sel.length}</div></div>
@@ -815,7 +833,7 @@ async function suivreExport() {
 async function lancerExport() {
   const f = S.form; f.envoi = true; rendreExport();
   try {
-    const r = await api('export', { pieces: [...f.pieces], annexes: f.annexes });
+    const r = await api('export', { pieces: [...f.pieces], annexes: f.annexes, maif: f.maif });
     f.envoi = false;
     if (!r.ok && r.error !== 'EN_COURS') { toast(r.error === 'ACTION' ? 'Mets à jour le script (Export.gs)' : 'Échec : ' + r.message); rendreExport(); return; }
     S.expSt = f.st = r.statut; rendreExport(); suivreExport();
@@ -914,6 +932,8 @@ document.addEventListener('click', ev => {
     case 'refresh': fermer(); S.lastFetch = 0; rafraichir(true); toast('Actualisation…'); break;
     case 'mailtest': api('mail-test').then(r => toast(r.ok ? '📧 Mail de test envoyé' : 'Échec : ' + r.message)).catch(() => toast('Connexion impossible')); break;
     case 'export': ouvrirExport(); break;
+    case 'maif': basculerMaif(); break;
+    case 'x-sel': S.form.maif = el.dataset.v === '1'; rendreExport(); break;
     case 'x-piece': { const p = el.dataset.p, P = S.form.pieces; if (!p) P.clear(); else if (P.has(p)) P.delete(p); else P.add(p); rendreExport(); break; }
     case 'x-ann': S.form.annexes = el.dataset.v === '1'; rendreExport(); break;
     case 'x-go': lancerExport(); break;
