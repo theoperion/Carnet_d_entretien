@@ -243,7 +243,7 @@ textarea.field{min-height:70px;resize:vertical}
 <script>
 /* ================= CONFIG ================= */
 // Colle ici l'URL de ton déploiement Apps Script (…/exec). Sinon l'app te la demandera à la première ouverture.
-const API_URL = 'https://script.google.com/macros/s/AKfycbyEP6XTBmmPl5GbluZdyvsNo9nzOoiqtXfetMNF-Am-6qXYdrfr0TjGYl23uazyHRY6bA/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwaHRhF78AV98ig5Zk9Z4tJ-dzT3-u4RC8gbhqrDPzQ4SgD6zrPABFIdvocXRGlPM99FA/exec';
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1iy3H37w2_-2DAS21jzTKz2N_3QewGSZgVtQ7Thl0BKA/edit';
 const VERSION = '1.2';
 
@@ -724,6 +724,7 @@ function ouvrirLudo() {
     <div class="search">${ICON.search}<input id="lq" type="search" placeholder="Chercher un jeu, un éditeur…" value="${esc(S.lq)}"></div>
     <div class="chips">${F.filter(f => f[2] || !f[0]).map(([k, l, n]) => `<button class="chip ${S.lf === k ? 'on' : ''}" data-act="lfiltre" data-f="${k}">${l}<small>${n}</small></button>`).join('')}</div>
     <div class="list" id="llist">${listeJeux()}</div>
+    <button class="go sec2" data-act="export-ludo">📄 Exporter la ludothèque (PDF / Word)</button>
     <div class="note">Liste tenue à jour depuis MyLudo : réexporte ta ludothèque et dépose le fichier dans le Drive (MyLudo (exports)).</div>`);
 }
 function listeJeux() {
@@ -835,8 +836,8 @@ function basculerMaif() {
 }
 
 /* ---------- export du dossier (PDF / Word) ---------- */
-function ouvrirExport() {
-  S.form = { mode: 'export', pieces: new Set(S.iPiece ? [S.iPiece] : []), annexes: true, maif: S.d.inventaire.some(b => b.maif), st: S.expSt || null, dernier: S.expDernier || null, charge: !S.expSt };
+function ouvrirExport(ludo) {
+  S.form = { mode: 'export', pieces: new Set(S.iPiece ? [S.iPiece] : []), annexes: true, maif: S.d.inventaire.some(b => b.maif), ludo: !!ludo && (S.d.jeux || []).length > 0, st: S.expSt || null, dernier: S.expDernier || null, charge: !S.expSt };
   ouvrir(''); rendreExport(); suivreExport();
 }
 function rendreExport() {
@@ -848,8 +849,15 @@ function rendreExport() {
   const sel = I.filter(b => (!f.pieces.size || f.pieces.has(b.piece)) && (!f.maif || b.maif));
   const st = f.st, enCours = st && (st.etat === 'attente' || st.etat === 'en cours');
   const ago = iso => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? "à l'instant" : m < 60 ? 'il y a ' + m + ' min' : new Date(iso).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }); };
-  let h = tete('Dossier pour l\'assurance', 'Couverture, récap par pièce, une fiche par bien avec ses photos, puis les factures en annexe');
-  if (!enCours) {
+  const J = (S.d.jeux || []).filter(j => j.assure), lot = I.find(estLotJeux);
+  let h = tete('Dossier pour l\'assurance', f.ludo ? 'Ludothèque : vue d\'ensemble, récap par type et liste des jeux avec leur valeur à neuf' : 'Couverture, récap par pièce, une fiche par bien avec ses photos, puis les factures en annexe');
+  if (!enCours && (S.d.jeux || []).length) h += `<div class="lbl">Contenu</div><div class="chips wrap"><button class="chip ${!f.ludo ? 'on' : ''}" data-act="x-ludo" data-v="0">📄 Inventaire</button><button class="chip ${f.ludo ? 'on' : ''}" data-act="x-ludo" data-v="1">🎲 Ludothèque<small>${J.length}</small></button></div>`;
+  if (!enCours && f.ludo) {
+    h += `<div class="kv" style="margin-top:10px"><div>Jeux et extensions</div><div><b>${J.length}</b> · ${e0(valeurLudo())}</div>
+    <div>Sans prix</div><div>${J.filter(j => !j.valeur).length}</div><div>Vue d'ensemble</div><div>${lot && lot.photo ? '📷 photos de la ligne « Jeux de société »' : 'pas encore de photo des étagères'}</div></div>
+    <button class="go" data-act="x-go" ${lot && !f.envoi ? '' : 'disabled'}>${f.envoi ? 'Lancement…' : '🎲 Générer la ludothèque'}</button>
+    <p class="muted" style="font-size:12.5px;font-style:italic;margin:8px 2px 0">Couverture avec les chiffres clés, photos des étagères si tu en as ajouté sur la ligne « Jeux de société », puis la liste complète. PDF et Word, un mail arrive avec les liens.</p>`;
+  } else if (!enCours) {
     h += `<div class="lbl">Biens</div><div class="chips wrap"><button class="chip ${f.maif ? 'on' : ''}" data-act="x-sel" data-v="1" ${nMaif ? '' : 'disabled style="opacity:.45"'}>🛡 Sélection MAIF<small>${nMaif}</small></button><button class="chip ${!f.maif ? 'on' : ''}" data-act="x-sel" data-v="0">Tout l'inventaire<small>${I.length}</small></button></div>
     ${nMaif ? '' : '<p class="muted" style="font-size:12.5px;font-style:italic;margin:2px 2px 0">Aucun bien coché : ouvre une fiche et « Ajouter au dossier MAIF ».</p>'}
     <div class="lbl">Pièces</div><div class="chips wrap"><button class="chip ${!f.pieces.size ? 'on' : ''}" data-act="x-piece" data-p="">Toutes</button>${L.map(p => `<button class="chip ${f.pieces.has(p) ? 'on' : ''}" data-act="x-piece" data-p="${esc(p)}">${esc(p)}<small>${I.filter(b => b.piece === p).length}</small></button>`).join('')}</div>
@@ -862,12 +870,12 @@ function rendreExport() {
   if (f.charge) h += `<div class="empty">Vérification des exports…</div>`;
   if (enCours) h += `<div class="prog"><div class="lab">Export en cours${st.pieces && st.pieces.length ? ' · ' + esc(st.pieces.join(', ')) : ''}</div><div class="et">${esc(st.etape || '…')}</div>
     <div class="gauge run"><i style="width:${Math.max(4, st.pct || 0)}%"></i></div><div class="sub">${st.pct || 0} % · tu peux fermer l'appli, le mail suivra</div></div>`;
-  if (st && st.etat === 'termine') h += `<div class="okbox"><h4>✓ Dossier prêt</h4><div style="font-size:13.5px">${st.nbBiens} biens · ${st.nbAnnexes}${st.nbAnnexesPrevues ? '/' + st.nbAnnexesPrevues : ''} factures en annexe${st.pagesAnnexes ? ' (' + st.pagesAnnexes + ' p.)' : ''} · ${ago(st.fin)}</div>
+  if (st && st.etat === 'termine') h += `<div class="okbox"><h4>✓ ${st.ludo ? 'Ludothèque prête' : 'Dossier prêt'}</h4><div style="font-size:13.5px">${st.ludo ? st.nbJeux + ' jeux · ' + e0(st.valeurJeux) + ' · ' + ago(st.fin) + '</div>' : `${st.nbBiens} biens · ${st.nbAnnexes}${st.nbAnnexesPrevues ? '/' + st.nbAnnexesPrevues : ''} factures en annexe${st.pagesAnnexes ? ' (' + st.pagesAnnexes + ' p.)' : ''} · ${ago(st.fin)}</div>`}
     ${(st.avertissements || []).length ? `<ul class="warnlist">${st.avertissements.map(a => `<li>${esc(a)}</li>`).join('')}</ul>` : ''}</div>
     <a class="go" href="${esc(st.pdf)}" target="_blank" rel="noopener">Ouvrir le PDF</a>
     <div class="btnrow">${st.docx ? `<a class="go sec2" href="${esc(st.docx)}" target="_blank" rel="noopener">Version Word</a>` : ''}<a class="go sec2" href="${esc(st.dossier)}" target="_blank" rel="noopener">Dossier Drive</a></div>`;
   else if (st && st.etat === 'erreur') h += `<div class="errbox"><b>L'export a échoué</b><br>${esc(st.message || '')}</div>`;
-  if (f.dernier && !(st && st.etat === 'termine')) h += `<div class="lbl">Dernier dossier</div><div class="list"><a class="item tap" href="${esc(f.dernier.pdf)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><div class="grow"><div class="ttl">${esc((f.dernier.pieces || []).length ? f.dernier.pieces.join(', ') : 'Inventaire complet')}</div><div class="desc">${f.dernier.nbBiens} biens · ${f.dernier.nbAnnexes} factures · ${ago(f.dernier.fin)}</div></div><span class="badge">PDF ›</span></a></div>`;
+  if (f.dernier && !(st && st.etat === 'termine')) h += `<div class="lbl">Dernier dossier</div><div class="list"><a class="item tap" href="${esc(f.dernier.pdf)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none"><div class="grow"><div class="ttl">${esc(f.dernier.ludo ? 'Ludothèque' : (f.dernier.pieces || []).length ? f.dernier.pieces.join(', ') : 'Inventaire complet')}</div><div class="desc">${f.dernier.ludo ? f.dernier.nbJeux + ' jeux · ' + e0(f.dernier.valeurJeux) : f.dernier.nbBiens + ' biens · ' + f.dernier.nbAnnexes + ' factures'} · ${ago(f.dernier.fin)}</div></div><span class="badge">PDF ›</span></a></div>`;
   $('#sheetIn').innerHTML = h;
 }
 async function suivreExport() {
@@ -887,7 +895,7 @@ async function suivreExport() {
 async function lancerExport() {
   const f = S.form; f.envoi = true; rendreExport();
   try {
-    const r = await api('export', { pieces: [...f.pieces], annexes: f.annexes, maif: f.maif });
+    const r = await api('export', f.ludo ? { ludo: true } : { pieces: [...f.pieces], annexes: f.annexes, maif: f.maif });
     f.envoi = false;
     if (!r.ok && r.error !== 'EN_COURS') { toast(r.error === 'ACTION' ? 'Mets à jour le script (Export.gs)' : 'Échec : ' + r.message); rendreExport(); return; }
     S.expSt = f.st = r.statut; rendreExport(); suivreExport();
@@ -995,6 +1003,8 @@ document.addEventListener('click', ev => {
     case 'x-piece': { const p = el.dataset.p, P = S.form.pieces; if (!p) P.clear(); else if (P.has(p)) P.delete(p); else P.add(p); rendreExport(); break; }
     case 'x-ann': S.form.annexes = el.dataset.v === '1'; rendreExport(); break;
     case 'x-go': lancerExport(); break;
+    case 'x-ludo': S.form.ludo = el.dataset.v === '1'; rendreExport(); break;
+    case 'export-ludo': ouvrirExport(true); break;
     case 'logout': fermer(); LS.del('key'); S.key = ''; verrouiller(); break;
   }
 });
