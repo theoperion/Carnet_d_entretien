@@ -243,7 +243,7 @@ textarea.field{min-height:70px;resize:vertical}
 <script>
 /* ================= CONFIG ================= */
 // Colle ici l'URL de ton déploiement Apps Script (…/exec). Sinon l'app te la demandera à la première ouverture.
-const API_URL = 'https://script.google.com/macros/s/AKfycbxGc5MptlyEGHT6o5eFdR2idZ-SvkQ0UvP1PAj8AHHGWICZJLMOD5s2HK5E9UR2oJj2_g/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyEP6XTBmmPl5GbluZdyvsNo9nzOoiqtXfetMNF-Am-6qXYdrfr0TjGYl23uazyHRY6bA/exec';
 const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1iy3H37w2_-2DAS21jzTKz2N_3QewGSZgVtQ7Thl0BKA/edit';
 const VERSION = '1.2';
 
@@ -404,6 +404,7 @@ function apresAppel(op, res) {
     const b = S.d.inventaire.find(x => x.id === op.id);
     if (b && res.bien) Object.assign(b, res.bien, { pending: false });
   }
+  if (op.after === 'jeu') { const j = (S.d.jeux || []).find(x => x.row === op.row); if (j) j.pending = false; }
   if (op.after === 'contact') { const c = S.d.contacts.find(x => x.id === op.id); if (c) { c.row = res.row; c.pending = false; } }
 }
 
@@ -527,6 +528,8 @@ function vInventaire() {
   let h = `<div class="ink" style="margin-bottom:12px"><div class="lab">Valeur du mobilier</div><div class="val">${e0(val)} <span style="font-size:14px;font-weight:400;color:var(--light)">/ ${e0(pf)}</span></div>
     <div class="gauge"><i style="width:${Math.min(pct, 100)}%;background:${pct >= 90 ? 'var(--ora)' : 'var(--yel)'}"></i></div><div class="sub">${I.length} biens · ${pct} % du plafond MAIF · hors travaux</div></div>`;
   h += `<button class="expbtn" data-act="export"><span class="ic">📄</span><span><b>Dossier pour l'assurance</b><small>PDF ou Word · fiches, photos et factures</small></span><span class="chev">›</span></button>`;
+  const J = S.d.jeux || [];
+  if (J.length) h += `<button class="expbtn" data-act="ludo"><span class="ic">🎲</span><span><b>Ludothèque</b><small>${J.filter(j => j.assure).length} jeux et extensions assurés · ${e0(valeurLudo())}</small></span><span class="chev">›</span></button>`;
   h += `<div class="search">${ICON.search}<input id="iq" type="search" placeholder="Chercher un objet, une marque, un magasin…" value="${esc(S.iq)}"></div>`;
   const pieces = [...new Set(I.map(b => b.piece))].sort((a, b) => (S.d.listes.pieces.indexOf(a) + 99) % 99 - (S.d.listes.pieces.indexOf(b) + 99) % 99);
   h += `<div class="chips"><button class="chip ${!S.iPiece ? 'on' : ''}" data-act="ipiece" data-p="">Toutes</button>${pieces.map(p => `<button class="chip ${S.iPiece === p ? 'on' : ''}" data-act="ipiece" data-p="${esc(p)}">${esc(p)}<small>${I.filter(b => b.piece === p).length}</small></button>`).join('')}</div>`;
@@ -641,13 +644,14 @@ function ouvrirBien(id) {
   ouvrir(tete(esc(b.objet), esc(b.marque || '')) + `
     <div class="rowline" style="gap:6px;flex-wrap:wrap;margin-bottom:12px">${pieceTag(b.piece)}<span class="badge">${esc(b.categorie || '—')}</span>${b.garantie > 2 ? `<span class="badge star">★ ${b.garantie} ans</span>` : ''}${gStamp(b.statut)}</div>
     <div class="kv">
-      <div>Prix TTC</div><div class="mono"><b>${b.prix ? e2(b.prix) : '—'}</b></div>
+      <div>Prix TTC</div><div class="mono"><b>${b.prix ? e2(b.prix) : '—'}</b>${b.prixAuto ? ' <span class="badge">calculé</span>' : ''}</div>
       <div>Acheté le</div><div class="mono">${fr(b.date)}</div>
       <div>Magasin</div><div>${esc(b.magasin || '—')}</div>
       <div>N° de série</div><div class="mono">${esc(b.serie || '—')}</div>
       <div>Garantie</div><div>${b.garantie ? b.garantie + ' an' + (b.garantie > 1 ? 's' : '') + (b.finGarantie ? ' · jusqu\'au <span class="mono">' + fr(b.finGarantie) + '</span>' : '') : '—'}</div>
     </div>
     ${b.remarque ? `<div class="note">${esc(b.remarque)}</div>` : ''}
+    ${estLotJeux(b) && (S.d.jeux || []).length ? `<button class="go sec2" data-act="ludo">🎲 Voir la ludothèque (${S.d.jeux.filter(j => j.assure).length})</button>` : ''}
     <div class="btnrow">
       ${b.facture ? `<a class="go sec2" href="${esc(b.facture)}" target="_blank" rel="noopener">${esc(b.factureLabel || '📄 Facture')}</a>` : `<span class="go sec2" style="opacity:.45">Pas de facture</span>`}
       ${b.photo ? `<a class="go sec2" href="${esc(b.photo)}" target="_blank" rel="noopener">${esc(b.photoLabel || '📁 Photos')}</a>` : `<span class="go sec2" style="opacity:.45">Aucune photo</span>`}
@@ -669,7 +673,7 @@ function rendreBienEdit() {
     <div class="lbl">Pièce</div><div class="chips wrap">${L.pieces.map(p => `<button class="chip ${v.piece === p ? 'on' : ''}" data-act="b-piece" data-p="${esc(p)}">${esc(p)}</button>`).join('')}</div>
     <div class="lbl">Catégorie</div><select class="field" id="b-categorie">${L.categories.map(c => `<option ${v.categorie === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
     <div class="lbl">Marque / modèle</div><input class="field" id="b-marque" value="${esc(v.marque)}">
-    <div class="grid2"><div><div class="lbl">Prix TTC (€)</div><input class="field mono" id="b-prix" inputmode="decimal" value="${v.prix === '' ? '' : String(v.prix).replace('.', ',')}"></div>
+    <div class="grid2"><div><div class="lbl">Prix TTC (€)</div><input class="field mono" id="b-prix" inputmode="decimal" value="${v.prix === '' ? '' : String(v.prix).replace('.', ',')}" ${v.prixAuto ? 'readonly style="opacity:.55"' : ''}>${v.prixAuto ? '<div class="muted" style="font-size:11.5px;margin-top:3px">Calculé dans le Sheet : non modifiable ici</div>' : ''}</div>
       <div><div class="lbl">Date d'achat</div><input class="field mono" id="b-date" type="date" value="${esc(v.date)}"></div></div>
     <div class="grid2"><div><div class="lbl">Magasin</div><input class="field" id="b-magasin" value="${esc(v.magasin)}"></div>
       <div><div class="lbl">N° de série</div><input class="field mono" id="b-serie" value="${esc(v.serie)}"></div></div>
@@ -681,7 +685,7 @@ function rendreBienEdit() {
 }
 function lireBienForm() {
   const v = S.form.v;['objet', 'marque', 'magasin', 'serie', 'remarque', 'date', 'categorie'].forEach(k => { const e = $('#b-' + k); if (e) v[k] = e.value.trim(); });
-  const p = $('#b-prix'); if (p) { const n = Number(p.value.replace(/\s/g, '').replace(',', '.')); v.prix = p.value.trim() === '' || isNaN(n) ? '' : n; }
+  const p = $('#b-prix'); if (p && !v.prixAuto) { const n = Number(p.value.replace(/\s/g, '').replace(',', '.')); v.prix = p.value.trim() === '' || isNaN(n) ? '' : n; }
 }
 function enregistrerBien() {
   lireBienForm(); const f = S.form, v = f.v;
@@ -706,6 +710,56 @@ function supprimerBien() {
   S.d.inventaire = S.d.inventaire.filter(x => x !== b);
   if (b.row) enfiler({ op: 'call', action: 'inv-del', payload: { row: b.row, attendu: { objet: b.srvObjet || b.objet } } });
   rendre(true); toast('Retiré de l\'inventaire');
+}
+
+/* ---------- ludothèque (onglet « 🎲 Jeux de société », alimenté par l'export MyLudo) ---------- */
+const estLotJeux = b => /^jeux de soci/i.test(b.objet || '');
+const valeurLudo = () => (S.d.jeux || []).filter(j => j.assure).reduce((s, j) => s + (Number(j.valeur) || 0), 0);
+function ouvrirLudo() {
+  S.form = { mode: 'ludo' }; S.lq = S.lq || ''; S.lf = S.lf || '';
+  const J = S.d.jeux || [];
+  const F = [['', 'Tous', J.length], ['Jeu', 'Jeux', J.filter(j => j.type !== 'Extension' && j.type !== 'Accessoire').length], ['Extension', 'Extensions', J.filter(j => j.type === 'Extension').length],
+    ['prix', '€ Sans prix', J.filter(j => !j.valeur).length], ['non', 'Non assurés', J.filter(j => !j.assure).length]];
+  ouvrir(tete('🎲 Ludothèque', `${J.filter(j => j.assure).length} assurés · <b>${e0(valeurLudo())}</b> en valeur à neuf`) + `
+    <div class="search">${ICON.search}<input id="lq" type="search" placeholder="Chercher un jeu, un éditeur…" value="${esc(S.lq)}"></div>
+    <div class="chips">${F.filter(f => f[2] || !f[0]).map(([k, l, n]) => `<button class="chip ${S.lf === k ? 'on' : ''}" data-act="lfiltre" data-f="${k}">${l}<small>${n}</small></button>`).join('')}</div>
+    <div class="list" id="llist">${listeJeux()}</div>
+    <div class="note">Liste tenue à jour depuis MyLudo : réexporte ta ludothèque et dépose le fichier dans le Drive (MyLudo (exports)).</div>`);
+}
+function listeJeux() {
+  const q = norm(S.lq || ''), f = S.lf;
+  const L = (S.d.jeux || []).filter(j => (!q || norm([j.titre, j.editeur, j.type].join(' ')).includes(q))
+    && (!f || (f === 'Jeu' ? j.type !== 'Extension' && j.type !== 'Accessoire' : f === 'prix' ? !j.valeur : f === 'non' ? !j.assure : j.type === f)));
+  if (!L.length) return '<div class="empty">Aucun jeu ne correspond</div>';
+  return L.map(j => `<div class="item tap ${j.pending ? 'pending' : ''}" data-act="jeu" data-row="${j.row}" ${j.assure ? '' : 'style="opacity:.5"'}>
+    <div class="grow"><div class="ttl">${esc(j.titre)}</div><div class="desc">${esc(j.editeur || '')}</div>
+    <div class="meta"><span class="badge">${esc(j.type)}</span>${j.sleeve ? '<span class="badge">sleevé</span>' : ''}${j.insert ? '<span class="badge">insert</span>' : ''}${j.proprio ? `<span class="badge warn">à ${esc(j.proprio)}</span>` : ''}${!j.assure ? '<span class="badge warn">non assuré</span>' : ''}</div></div>
+    <div class="when"><b>${j.valeur ? e2(j.valeur) : '<span class="badge warn">prix ?</span>'}</b>${j.date ? frCourt(j.date) + '/' + j.date.slice(2, 4) : ''}</div></div>`).join('');
+}
+function ouvrirJeu(row) {
+  const j = (S.d.jeux || []).find(x => x.row === +row); if (!j) return;
+  S.form = { mode: 'jeu', row: j.row };
+  ouvrir(tete(esc(j.titre), esc(j.editeur || '')) + `
+    <div class="kv">
+      <div>Type</div><div>${esc(j.type || '—')}</div>
+      <div>Édition</div><div class="mono">${esc(j.edition || '—')}</div>
+      <div>Acquis le</div><div class="mono">${fr(j.date)}</div>
+      <div>Valeur à neuf</div><div class="mono"><b>${j.valeur ? e2(j.valeur) : '—'}</b></div>
+      <div>Source du prix</div><div>${esc(j.source || '—')}</div>
+      <div>Protection</div><div>${[j.sleeve ? 'sleevé' : '', j.insert ? 'insert' : ''].filter(Boolean).join(' · ') || 'aucune'}</div>
+      ${j.proprio ? `<div>Propriétaire</div><div>${esc(j.proprio)}</div>` : ''}
+    </div>
+    ${j.remarque ? `<div class="note">${esc(j.remarque)}</div>` : ''}
+    <button class="go ${j.assure ? 'maifon' : 'sec2'}" data-act="jeu-assure">${j.assure ? '✓ Compté dans la valeur assurée (retirer)' : 'Compter dans la valeur assurée'}</button>
+    <button class="go sec2" data-act="ludo">‹ Retour à la ludothèque</button>`);
+}
+function basculerJeu() {
+  const j = (S.d.jeux || []).find(x => x.row === S.form.row); if (!j) return;
+  j.assure = !j.assure; j.pending = true;
+  const lot = S.d.inventaire.find(estLotJeux); if (lot) lot.prix = valeurLudo();
+  enfiler({ op: 'call', action: 'jeu-assurer', payload: { row: j.row, attendu: { titre: j.titre }, assure: j.assure }, after: 'jeu', row: j.row });
+  ouvrirJeu(j.row); rendre(true);
+  toast(j.assure ? 'Compté dans la valeur assurée' : 'Retiré de la valeur assurée');
 }
 
 /* ---------- photo ---------- */
@@ -932,6 +986,10 @@ document.addEventListener('click', ev => {
     case 'refresh': fermer(); S.lastFetch = 0; rafraichir(true); toast('Actualisation…'); break;
     case 'mailtest': api('mail-test').then(r => toast(r.ok ? '📧 Mail de test envoyé' : 'Échec : ' + r.message)).catch(() => toast('Connexion impossible')); break;
     case 'export': ouvrirExport(); break;
+    case 'ludo': ouvrirLudo(); break;
+    case 'lfiltre': S.lf = S.lf === el.dataset.f ? '' : el.dataset.f; ouvrirLudo(); break;
+    case 'jeu': ouvrirJeu(el.dataset.row); break;
+    case 'jeu-assure': basculerJeu(); break;
     case 'maif': basculerMaif(); break;
     case 'x-sel': S.form.maif = el.dataset.v === '1'; rendreExport(); break;
     case 'x-piece': { const p = el.dataset.p, P = S.form.pieces; if (!p) P.clear(); else if (P.has(p)) P.delete(p); else P.add(p); rendreExport(); break; }
@@ -942,6 +1000,7 @@ document.addEventListener('click', ev => {
 });
 document.addEventListener('input', ev => {
   if (ev.target.id === 'iq') { S.iq = ev.target.value; $('#ilist').innerHTML = listeBiens(); }
+  if (ev.target.id === 'lq') { S.lq = ev.target.value; $('#llist').innerHTML = listeJeux(); }
 });
 $('#fileIn').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; if (f) envoyerPhoto(f); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { rafraichir(false); pomper(); } });
